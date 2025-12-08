@@ -8,359 +8,349 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #0f172a; color: #e2e8f0; font-family: 'MedievalSharp', cursive; }
-        
-        /* HP Bar Styles */
-        .hp-container {
-            width: 100%;
-            height: 10px; /* Thinner on mobile default */
-            background: #020617;
-            border: 1px solid #334155;
-            border-radius: 999px;
-            overflow: hidden;
-            margin-top: 4px;
-            box-shadow: inset 0 0 10px #000;
+        /* Backdrop style for desktop view */
+        body { 
+            background-color: #020617; 
+            color: #e2e8f0; 
+            font-family: 'MedievalSharp', cursive; 
+            background-image: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
         }
-        @media (min-width: 1024px) { .hp-container { height: 16px; margin-top: 8px; } }
+        
+        /* Split Screen Styles */
+        .split-panel {
+            position: relative;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            border-right: 2px solid #000;
+            border-left: 2px solid #000;
+        }
+        .split-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.9) 100%);
+            pointer-events: none;
+            transition: all 0.5s ease-in-out;
+        }
+        .split-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
 
+        /* HP Bar Styles */
+        .hp-track {
+            width: 100%;
+            height: 32px;
+            background: #1e293b;
+            border: 3px solid #0f172a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px #000;
+            margin-top: 4px;
+        }
         .hp-fill {
             height: 100%;
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.3);
         }
 
-        /* Character Animations */
-        @keyframes damage-shake {
-            0% { transform: translate(0, 0); filter: brightness(1) sepia(0) hue-rotate(0deg); }
-            20% { transform: translate(-5px, 0); filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
-            40% { transform: translate(5px, 0); }
-            60% { transform: translate(-5px, 0); }
-            80% { transform: translate(5px, 0); }
-            100% { transform: translate(0, 0); filter: brightness(1); }
+        .text-glow {
+            text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
         }
-        .taking-damage img { animation: damage-shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
 
-        /* Turn Indication */
-        .active-turn img { 
-            box-shadow: 0 0 20px rgba(234, 179, 8, 0.5); 
-            border-color: #facc15; 
-            transform: scale(1.05);
-        }
-        .inactive-turn { opacity: 0.6; filter: grayscale(0.5); transform: scale(0.95); }
-        .portrait { transition: all 0.5s ease-in-out; border-width: 3px; }
-        @media (min-width: 1024px) { .portrait { border-width: 4px; } }
-
-        /* Dice Animation */
+        .active-turn .split-image { transform: scale(1.1); filter: brightness(1.1); }
+        .inactive-turn .split-image { filter: grayscale(0.8) brightness(0.5); }
+        
         @keyframes shake {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(10deg); }
-            50% { transform: rotate(-10deg); }
-            75% { transform: rotate(5deg); }
-            100% { transform: rotate(0deg); }
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg); }
+            75% { transform: rotate(-15deg); }
         }
-        .rolling { animation: shake 0.2s ease-in-out infinite; }
-        .die-shape { transition: all 0.3s ease-out; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
+        .rolling { animation: shake 0.2s infinite; }
+        
+        @keyframes damage-flash {
+            0%, 100% { filter: brightness(1) sepia(0) hue-rotate(0deg); }
+            50% { filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
+        }
+        .taking-damage { animation: damage-flash 0.3s; }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden bg-slate-950 selection:bg-yellow-900">
+<body class="h-screen w-screen overflow-hidden flex items-center justify-center">
 
-    <!-- Top Half: Battle Arena -->
-    <div class="flex-1 flex items-center justify-center p-2 lg:p-4 relative">
-        
-        <div class="grid grid-cols-2 gap-4 lg:gap-12 w-full max-w-4xl items-center">
+    <!-- MOBILE VIEWPORT CONTAINER -->
+    <!-- This div acts as the "Phone Screen". On desktop it's centered with fixed max dimensions. on Mobile it fills the screen. -->
+    <div id="mobile-frame" class="relative w-full max-w-[420px] h-full max-h-[900px] bg-slate-950 shadow-2xl flex flex-col overflow-hidden lg:rounded-[3rem] lg:border-[12px] lg:border-slate-800 ring-1 ring-white/10">
+
+        <!-- TOP SECTION: BATTLE VIEW (60% Height) -->
+        <div class="h-[60%] w-full flex relative bg-slate-900">
             
-            <!-- HERO SIDE (Left) -->
-            <div id="hero-unit" class="flex flex-col items-center transition-all duration-500 active-turn">
-                <!-- Portrait -->
-                <div class="w-24 h-24 lg:w-56 lg:h-56 rounded-full overflow-hidden relative bg-slate-900 portrait border-blue-900/50">
-                    <img src="https://image.pollinations.ai/prompt/fantasy%20warrior%20portrait%20rugged%20face%20scarred%20armor%20heroic%20lighting%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=600&nologin=true&seed=99" class="w-full h-full object-cover" alt="Hero">
-                </div>
+            <!-- HERO (Left) -->
+            <div id="hero-panel" class="split-panel active-turn border-r-4 border-slate-900">
+                <img src="https://image.pollinations.ai/prompt/fantasy%20warrior%20portrait%20rugged%20face%20scarred%20armor%20heroic%20lighting%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=99" class="split-image" alt="Hero">
                 
-                <!-- Stats -->
-                <div class="mt-2 lg:mt-4 text-center w-full max-w-[130px] lg:max-w-[200px]">
-                    <div class="flex justify-between items-end mb-1 px-1 lg:px-2">
-                        <span class="text-sm lg:text-3xl font-bold text-blue-400 font-old tracking-wide">Hero</span>
-                        <span id="hero-hp-text" class="text-sm lg:text-2xl font-bold text-white">100</span>
+                <!-- Hero Stats Overlay -->
+                <div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
+                    <div class="flex justify-between items-end">
+                        <span class="text-2xl font-bold text-blue-400 text-glow tracking-wider">HERO</span>
+                        <span id="hero-hp-text" class="text-2xl font-bold text-white text-glow">100</span>
                     </div>
-                    <div class="hp-container">
-                        <div id="hero-bar" class="hp-fill bg-gradient-to-r from-blue-900 via-blue-500 to-blue-400" style="width: 100%"></div>
+                    <div class="hp-track h-6 border-2">
+                        <div id="hero-bar" class="hp-fill bg-blue-600" style="width: 100%"></div>
                     </div>
-                    <div class="mt-1 lg:mt-2 inline-block bg-slate-800/80 px-2 lg:px-3 py-0.5 lg:py-1 rounded text-[10px] lg:text-xs text-blue-200 border border-slate-600">AC 15</div>
+                    <div class="mt-2 flex gap-1">
+                        <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AC 15</span>
+                        <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">LVL 5</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- VS Badge (Absolute Center) -->
-            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-                <span class="text-2xl lg:text-6xl font-black text-red-600/50 italic font-old drop-shadow-xl">VS</span>
+            <!-- VS Badge (Center) -->
+            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
+                <span class="text-6xl font-black text-white italic text-glow drop-shadow-2xl" style="font-family: serif;">VS</span>
             </div>
 
-            <!-- ENEMY SIDE (Right) -->
-            <div id="enemy-unit" class="flex flex-col items-center transition-all duration-500 inactive-turn">
-                <!-- Portrait -->
-                <div class="w-24 h-24 lg:w-56 lg:h-56 rounded-full overflow-hidden relative bg-slate-900 portrait border-red-900/50">
-                    <img src="https://image.pollinations.ai/prompt/fearsome%20ogre%20portrait%20fantasy%20art%201970s%20style?width=600&height=600&nologin=true" class="w-full h-full object-cover" alt="Ogre">
-                </div>
-
-                <!-- Stats -->
-                <div class="mt-2 lg:mt-4 text-center w-full max-w-[130px] lg:max-w-[200px]">
-                    <div class="flex justify-between items-end mb-1 px-1 lg:px-2">
-                        <span class="text-sm lg:text-3xl font-bold text-red-500 font-old tracking-wide">Ogre</span>
-                        <span id="enemy-hp-text" class="text-sm lg:text-2xl font-bold text-white">50</span>
+            <!-- ENEMY (Right) -->
+            <div id="enemy-panel" class="split-panel inactive-turn border-l-4 border-slate-900">
+                <img src="https://image.pollinations.ai/prompt/fearsome%20ogre%20portrait%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true" class="split-image" alt="Enemy">
+                
+                <!-- Enemy Stats Overlay -->
+                <div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
+                    <div class="flex justify-between items-end">
+                        <span class="text-2xl font-bold text-red-500 text-glow tracking-wider">OGRE</span>
+                        <span id="enemy-hp-text" class="text-2xl font-bold text-white text-glow">50</span>
                     </div>
-                    <div class="hp-container">
-                        <div id="enemy-bar" class="hp-fill bg-gradient-to-r from-red-900 via-red-600 to-red-500" style="width: 100%"></div>
+                    <div class="hp-track h-6 border-2">
+                        <div id="enemy-bar" class="hp-fill bg-red-600" style="width: 100%"></div>
                     </div>
-                    <div class="mt-1 lg:mt-2 inline-block bg-slate-800/80 px-2 lg:px-3 py-0.5 lg:py-1 rounded text-[10px] lg:text-xs text-red-200 border border-slate-600">AC 13</div>
+                    <div class="mt-2 flex gap-1 justify-end">
+                        <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AC 13</span>
+                        <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">CR 2</span>
+                    </div>
                 </div>
             </div>
-
         </div>
-    </div>
 
-    <!-- Bottom Half: Controls & Dice -->
-    <div class="h-[40%] bg-slate-900/80 backdrop-blur-md border-t border-slate-700 p-4 lg:p-6 flex flex-col items-center justify-start gap-4 lg:gap-6 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-20">
-        
-        <!-- Dice & Log Container -->
-        <div class="flex items-center gap-4 lg:gap-6 w-full max-w-lg justify-center">
+        <!-- BOTTOM SECTION: CONTROLS (40% Height) -->
+        <div class="h-[40%] w-full bg-slate-900 border-t-4 border-slate-700 flex flex-col items-center p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-20">
             
-            <!-- The Dice (Left) -->
-            <div id="dice-container" class="relative w-16 h-16 lg:w-24 lg:h-24 shrink-0 flex items-center justify-center">
-                <svg id="die-svg" viewBox="0 0 100 100" class="w-full h-full die-shape text-slate-600 fill-current drop-shadow-xl">
-                    <path d="M50 5 L93 28 V72 L50 95 L7 72 V28 Z" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
-                </svg>
-                <div id="dice-val" class="absolute inset-0 flex items-center justify-center text-2xl lg:text-4xl font-black text-white/90 drop-shadow-md">?</div>
+            <!-- Info Banner -->
+            <div id="turn-banner" class="mb-4 bg-yellow-600 text-black px-6 py-1 rounded-full font-bold uppercase tracking-widest text-xs shadow-lg">
+                Your Turn
             </div>
 
-            <!-- Action Log (Right) -->
-            <div class="flex-1 text-left min-w-0">
-                <div id="log-title" class="text-lg lg:text-2xl text-yellow-500 font-bold tracking-wide drop-shadow-sm mb-0.5 truncate">Your Turn</div>
-                <div id="log-desc" class="text-xs lg:text-sm text-slate-400 leading-snug">The battle begins! Roll to attack.</div>
+            <div class="w-full flex flex-col gap-4 flex-1 justify-center">
+                
+                <!-- Dice & Log Row -->
+                <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+                    <!-- Dice Icon -->
+                    <div class="relative w-14 h-14 flex-shrink-0 flex items-center justify-center">
+                        <svg id="die-svg" viewBox="0 0 100 100" class="w-full h-full text-slate-500 fill-current drop-shadow-lg transition-colors duration-300">
+                            <path d="M50 5 L93 28 V72 L50 95 L7 72 V28 Z" stroke="rgba(255,255,255,0.2)" stroke-width="2" />
+                        </svg>
+                        <div id="dice-val" class="absolute inset-0 flex items-center justify-center text-xl font-black text-white">?</div>
+                    </div>
+                    
+                    <!-- Text Log -->
+                    <div class="flex-1 min-w-0">
+                        <div id="log-title" class="text-lg font-bold text-white truncate">Battle Started</div>
+                        <div id="log-desc" class="text-xs text-slate-400 truncate">Roll to attack the beast!</div>
+                    </div>
+                </div>
+
+                <!-- Buttons Row -->
+                <div class="flex gap-2 h-14">
+                    <!-- Attack Button -->
+                    <button id="btn-attack" onclick="battle.rollToHit()" class="flex-1 bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 border-b-4 border-yellow-950 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2 active:border-b-0 active:translate-y-1 transition-all shadow-lg">
+                        <i data-lucide="dices" class="w-5 h-5"></i> ROLL HIT
+                    </button>
+                    
+                    <!-- Damage Button (Hidden initially) -->
+                    <button id="btn-damage" onclick="battle.rollDamage()" class="hidden flex-1 bg-gradient-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 border-b-4 border-red-950 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2 active:border-b-0 active:translate-y-1 transition-all shadow-lg">
+                        <i data-lucide="sword" class="w-5 h-5"></i> ROLL DMG
+                    </button>
+                    
+                    <!-- Reset (Small) -->
+                    <button onclick="battle.reset()" class="w-14 bg-slate-700 hover:bg-slate-600 border-b-4 border-slate-900 rounded-xl flex items-center justify-center text-slate-300 active:border-b-0 active:translate-y-1 transition-all">
+                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div id="controls" class="w-full max-w-md grid grid-cols-1 gap-2 lg:gap-3">
-            <button id="btn-attack" onclick="battle.rollToHit()" class="bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-600 hover:to-yellow-500 text-white font-bold py-3 lg:py-4 rounded-xl border-b-4 border-yellow-900 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-3 text-lg lg:text-xl shadow-lg">
-                <i data-lucide="dices" class="w-5 h-5 lg:w-6 lg:h-6"></i> Roll to Hit
+        <!-- Victory/Defeat Overlay -->
+        <div id="end-overlay" class="absolute inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-6 text-center animate-in fade-in">
+            <h1 id="end-title" class="text-6xl font-black text-white mb-2 text-glow">VICTORY</h1>
+            <p id="end-desc" class="text-xl text-slate-300 mb-8">The enemy is defeated!</p>
+            <button onclick="battle.reset()" class="bg-white text-black px-8 py-4 rounded-xl font-bold text-xl hover:scale-105 transition-transform flex items-center gap-2">
+                <i data-lucide="rotate-ccw"></i> Play Again
             </button>
-            <button id="btn-damage" onclick="battle.rollDamage()" class="hidden bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white font-bold py-3 lg:py-4 rounded-xl border-b-4 border-red-900 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-3 text-lg lg:text-xl shadow-lg">
-                <i data-lucide="sword" class="w-5 h-5 lg:w-6 lg:h-6"></i> Roll Damage
-            </button>
-        </div>
-
-        <div class="absolute top-2 right-2 lg:top-4 lg:right-4">
-             <button onclick="battle.reset()" class="text-slate-500 hover:text-white transition-colors p-2"><i data-lucide="rotate-ccw" class="w-4 h-4 lg:w-5 lg:h-5"></i></button>
         </div>
 
     </div>
 
-    <!-- End Game Overlay -->
-    <div id="end-overlay" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center animate-in fade-in duration-500 p-4 text-center">
-        <h1 id="end-title" class="text-5xl lg:text-8xl font-black text-white mb-4 drop-shadow-[0_0_25px_rgba(255,255,255,0.5)]">VICTORY</h1>
-        <p id="end-desc" class="text-lg lg:text-2xl text-slate-300 mb-8">The beast has been slain.</p>
-        <button onclick="battle.reset()" class="bg-white text-black px-6 py-3 lg:px-8 lg:py-4 rounded-xl font-bold text-lg lg:text-xl hover:scale-105 transition-transform flex items-center gap-2 shadow-xl">
-            <i data-lucide="rotate-ccw"></i> Play Again
-        </button>
-    </div>
-
+    <!-- Battle Logic -->
     <script>
-        const config = {
-            heroHit: 80, heroMin: 5, heroMax: 10,
-            enemyHit: 50, enemyMin: 1, enemyMax: 4
-        };
-
+        const config = { heroHit: 80, heroMin: 5, heroMax: 10, enemyHit: 50, enemyMin: 1, enemyMax: 4 };
         const battle = {
-            state: {
-                heroHp: 100, heroMax: 100,
-                enemyHp: 50, enemyMax: 50,
-                isOver: false,
-                turn: 'player' 
-            },
+            state: { heroHp: 100, heroMax: 100, enemyHp: 50, enemyMax: 50, isOver: false, turn: 'player' },
 
             reset() {
-                this.state.heroHp = 100;
-                this.state.enemyHp = 50;
-                this.state.isOver = false;
-                this.state.turn = 'player';
-                
+                this.state = { heroHp: 100, heroMax: 100, enemyHp: 50, enemyMax: 50, isOver: false, turn: 'player' };
                 document.getElementById('end-overlay').classList.add('hidden');
                 this.updateUI();
-                this.setLog("Your Turn", "Roll to attack the beast.", "text-yellow-500");
-                this.setDiceDisplay("?", "slate");
+                this.setLog("Your Turn", "Roll to attack!", "text-white");
                 this.toggleButtons('attack');
-                this.setTurnFocus('hero');
+                this.setFocus('hero');
             },
 
-            // --- ROLL TO HIT (D20) ---
+            // --- Player Actions ---
             rollToHit() {
                 if(this.state.isOver) return;
                 this.animateDice(20);
                 this.toggleButtons('none');
                 
                 setTimeout(() => {
-                    const roll = Math.floor(Math.random() * 20) + 1; 
-                    const successRoll = Math.random() * 100; 
-                    const isHit = successRoll <= config.heroHit;
+                    const roll = Math.floor(Math.random() * 20) + 1;
+                    const isHit = (Math.random() * 100) <= config.heroHit;
+                    const displayRoll = isHit ? (roll < 10 ? roll + 10 : roll) : (roll > 10 ? roll - 10 : roll); // Fake logic for visual
 
-                    let displayRoll = roll;
-                    if (isHit && roll < 10) displayRoll = Math.floor(Math.random() * 10) + 11;
-                    if (!isHit && roll > 10) displayRoll = Math.floor(Math.random() * 10) + 1;
-
-                    this.setDiceDisplay(displayRoll, isHit ? "green" : "red");
-
+                    this.setDiceResult(displayRoll, isHit ? 'green' : 'red');
                     if (isHit) {
-                        this.setLog("TARGET HIT!", `You rolled ${displayRoll} vs AC 13.`, "text-green-400");
+                        this.setLog("HIT!", `You rolled ${displayRoll} vs AC 13`, "text-green-400");
                         setTimeout(() => this.toggleButtons('damage'), 800);
                     } else {
-                        this.setLog("MISSED!", `You rolled ${displayRoll}. Too low!`, "text-red-400");
-                        setTimeout(() => this.startEnemyTurn(), 1500);
+                        this.setLog("MISS!", `You rolled ${displayRoll} - Too low!`, "text-red-400");
+                        setTimeout(() => this.enemyTurn(), 1500);
                     }
                 }, 600);
             },
 
-            // --- ROLL DAMAGE (D8) ---
             rollDamage() {
                 this.animateDice(8);
                 this.toggleButtons('none');
-
                 setTimeout(() => {
                     const dmg = Math.floor(Math.random() * (config.heroMax - config.heroMin + 1)) + config.heroMin;
                     this.state.enemyHp = Math.max(0, this.state.enemyHp - dmg);
-                    
-                    this.setDiceDisplay(dmg, "red");
+                    this.setDiceResult(dmg, 'red');
+                    this.setLog(`DMG: ${dmg}`, "Direct hit on the Ogre!", "text-white");
                     this.triggerDamage('enemy');
-                    this.setLog(`HIT FOR ${dmg}!`, "The Ogre staggers back.", "text-white");
                     this.updateUI();
-
-                    if (this.state.enemyHp <= 0) {
-                        setTimeout(() => this.endGame(true), 1000);
-                    } else {
-                        setTimeout(() => this.startEnemyTurn(), 2000);
-                    }
+                    
+                    if (this.state.enemyHp <= 0) setTimeout(() => this.endGame(true), 1000);
+                    else setTimeout(() => this.enemyTurn(), 2000);
                 }, 600);
             },
 
-            // --- ENEMY TURN ---
-            startEnemyTurn() {
+            // --- Enemy Logic ---
+            enemyTurn() {
                 if(this.state.isOver) return;
-                
-                this.setTurnFocus('enemy');
-                this.setDiceDisplay("...", "slate");
-                this.setLog("Enemy Turn", "The Ogre raises its club...", "text-red-500");
+                this.setFocus('enemy');
+                this.setLog("Enemy Turn", "The Ogre attacks...", "text-red-500");
+                this.setDiceResult("...", "slate");
 
-                setTimeout(() => {
+                setTimeout(() => { // Roll Hit
                     this.animateDice(20);
                     setTimeout(() => {
-                        const isHit = Math.random() * 100 <= config.enemyHit;
+                        const isHit = (Math.random() * 100) <= config.enemyHit;
                         const roll = Math.floor(Math.random() * 20) + 1;
-                        let displayRoll = isHit ? Math.max(12, roll) : Math.min(10, roll);
+                        const displayRoll = isHit ? (roll < 12 ? roll + 8 : roll) : (roll > 8 ? roll - 8 : roll);
 
-                        this.setDiceDisplay(displayRoll, isHit ? "red" : "slate");
-
+                        this.setDiceResult(displayRoll, isHit ? 'red' : 'slate');
+                        
                         if (isHit) {
-                            setTimeout(() => {
+                            setTimeout(() => { // Roll Damage
                                 const dmg = Math.floor(Math.random() * (config.enemyMax - config.enemyMin + 1)) + config.enemyMin;
                                 this.state.heroHp = Math.max(0, this.state.heroHp - dmg);
+                                this.setLog("HIT!", `Ogre deals ${dmg} damage.`, "text-red-400");
+                                this.setDiceResult(dmg, 'red');
                                 this.triggerDamage('hero');
-                                this.setLog("YOU TAKE DAMAGE!", `Ogre hits for ${dmg}.`, "text-red-400");
-                                this.setDiceDisplay(dmg, "red");
                                 this.updateUI();
-                                
-                                if (this.state.heroHp <= 0) {
-                                    setTimeout(() => this.endGame(false), 1000);
-                                } else {
-                                    setTimeout(() => this.startPlayerTurn(), 2000);
-                                }
-                            }, 1000);
+                                if (this.state.heroHp <= 0) setTimeout(() => this.endGame(false), 1000);
+                                else setTimeout(() => this.playerTurn(), 2000);
+                            }, 800);
                         } else {
-                            this.setLog("OGRE MISSED", "You dodge the clumsy strike.", "text-slate-400");
-                            setTimeout(() => this.startPlayerTurn(), 2000);
+                            this.setLog("MISSED", "The Ogre swings wide.", "text-slate-400");
+                            setTimeout(() => this.playerTurn(), 2000);
                         }
                     }, 600);
                 }, 1000);
             },
 
-            startPlayerTurn() {
-                if(this.state.isOver) return;
-                this.setTurnFocus('hero');
-                this.setLog("Your Turn", "Roll to attack.", "text-yellow-500");
-                this.setDiceDisplay("?", "slate");
+            playerTurn() {
+                this.setFocus('hero');
+                this.setLog("Your Turn", "Command your hero.", "text-yellow-500");
+                this.setDiceResult("?", "slate");
                 this.toggleButtons('attack');
             },
 
             endGame(win) {
                 this.state.isOver = true;
-                const overlay = document.getElementById('end-overlay');
-                const title = document.getElementById('end-title');
-                const desc = document.getElementById('end-desc');
-                
-                overlay.classList.remove('hidden');
-                
-                if (win) {
-                    title.innerText = "VICTORY";
-                    title.className = "text-5xl lg:text-8xl font-black text-yellow-500 mb-4 drop-shadow-[0_0_25px_rgba(234,179,8,0.5)]";
-                    desc.innerText = "You have slain the beast and survived.";
-                } else {
-                    title.innerText = "DEFEAT";
-                    title.className = "text-5xl lg:text-8xl font-black text-red-600 mb-4 drop-shadow-[0_0_25px_rgba(220,38,38,0.5)]";
-                    desc.innerText = "Your journey ends in blood and darkness.";
-                }
+                const el = document.getElementById('end-overlay');
+                el.classList.remove('hidden');
+                document.getElementById('end-title').innerText = win ? "VICTORY" : "DEFEATED";
+                document.getElementById('end-title').className = win ? "text-6xl font-black text-yellow-500 mb-2 text-glow" : "text-6xl font-black text-red-600 mb-2 text-glow";
+                document.getElementById('end-desc').innerText = win ? "You have slain the beast!" : "Your journey ends here.";
             },
 
-            // --- UI Helpers ---
+            // --- Visuals ---
             updateUI() {
                 document.getElementById('hero-hp-text').innerText = this.state.heroHp;
                 document.getElementById('enemy-hp-text').innerText = this.state.enemyHp;
-                document.getElementById('hero-bar').style.width = `${(this.state.heroHp / this.state.heroMax) * 100}%`;
-                document.getElementById('enemy-bar').style.width = `${(this.state.enemyHp / this.state.enemyMax) * 100}%`;
+                document.getElementById('hero-bar').style.width = (this.state.heroHp / this.state.heroMax * 100) + '%';
+                document.getElementById('enemy-bar').style.width = (this.state.enemyHp / this.state.enemyMax * 100) + '%';
             },
 
-            setLog(title, desc, colorClass) {
-                const titleEl = document.getElementById('log-title');
-                titleEl.innerText = title;
-                titleEl.className = `text-lg lg:text-2xl font-bold tracking-wide drop-shadow-sm mb-0.5 ${colorClass}`;
+            setLog(title, desc, color) {
+                document.getElementById('log-title').innerText = title;
+                document.getElementById('log-title').className = `text-lg font-bold truncate ${color}`;
                 document.getElementById('log-desc').innerText = desc;
             },
 
-            setDiceDisplay(val, color) {
+            setDiceResult(val, color) {
                 document.getElementById('dice-val').innerText = val;
                 const svg = document.getElementById('die-svg');
                 svg.classList.remove('rolling');
-                
-                // Color mapping
-                if(color === 'red') svg.classList.value = "w-full h-full die-shape text-red-600 fill-current drop-shadow-xl";
-                else if(color === 'green') svg.classList.value = "w-full h-full die-shape text-green-600 fill-current drop-shadow-xl";
-                else svg.classList.value = "w-full h-full die-shape text-slate-600 fill-current drop-shadow-xl";
-            },
-
-            setTurnFocus(who) {
-                const heroUnit = document.getElementById('hero-unit');
-                const enemyUnit = document.getElementById('enemy-unit');
-                
-                if (who === 'hero') {
-                    heroUnit.classList.replace('inactive-turn', 'active-turn');
-                    enemyUnit.classList.replace('active-turn', 'inactive-turn');
-                } else {
-                    enemyUnit.classList.replace('inactive-turn', 'active-turn');
-                    heroUnit.classList.replace('active-turn', 'inactive-turn');
-                }
-            },
-
-            triggerDamage(who) {
-                const el = document.getElementById(`${who}-unit`);
-                el.classList.add('taking-damage');
-                setTimeout(() => el.classList.remove('taking-damage'), 500);
+                svg.classList.remove('text-slate-500', 'text-red-500', 'text-green-500');
+                if (color === 'red') svg.classList.add('text-red-500');
+                else if (color === 'green') svg.classList.add('text-green-500');
+                else svg.classList.add('text-slate-500');
             },
 
             animateDice(sides) {
                 const d = document.getElementById('die-svg');
                 d.classList.add('rolling');
+                d.classList.remove('text-red-500', 'text-green-500'); 
+                d.classList.add('text-slate-500');
                 document.getElementById('dice-val').innerText = '';
-                // Simple shape toggle for visuals
-                if (sides === 20) {
-                    d.innerHTML = `<path d="M50 5 L93 28 V72 L50 95 L7 72 V28 Z" stroke="rgba(255,255,255,0.15)" stroke-width="2" />`; 
+                // Toggle shape based on die type
+                if(sides === 20) d.innerHTML = '<path d="M50 5 L93 28 V72 L50 95 L7 72 V28 Z" stroke="rgba(255,255,255,0.2)" stroke-width="2" />';
+                else d.innerHTML = '<path d="M50 5 L95 50 L50 95 L5 50 Z" stroke="rgba(255,255,255,0.2)" stroke-width="2" />';
+            },
+
+            setFocus(who) {
+                const h = document.getElementById('hero-panel');
+                const e = document.getElementById('enemy-panel');
+                const banner = document.getElementById('turn-banner');
+                if (who === 'hero') {
+                    h.classList.replace('inactive-turn', 'active-turn');
+                    e.classList.replace('active-turn', 'inactive-turn');
+                    banner.innerText = "Your Turn";
+                    banner.className = "mb-4 bg-yellow-600 text-black px-6 py-1 rounded-full font-bold uppercase tracking-widest text-xs shadow-lg animate-pulse";
                 } else {
-                    d.innerHTML = `<path d="M50 5 L95 50 L50 95 L5 50 Z" stroke="rgba(255,255,255,0.15)" stroke-width="2" />`; 
+                    e.classList.replace('inactive-turn', 'active-turn');
+                    h.classList.replace('active-turn', 'inactive-turn');
+                    banner.innerText = "Enemy Turn";
+                    banner.className = "mb-4 bg-red-800 text-white px-6 py-1 rounded-full font-bold uppercase tracking-widest text-xs shadow-lg";
                 }
+            },
+
+            triggerDamage(who) {
+                const el = document.getElementById(who + '-panel');
+                el.classList.add('taking-damage');
+                setTimeout(() => el.classList.remove('taking-damage'), 300);
             },
 
             toggleButtons(mode) {
@@ -369,10 +359,7 @@
             }
         };
 
-        window.onload = function() {
-            lucide.createIcons();
-            battle.updateUI();
-        };
+        window.onload = () => { lucide.createIcons(); battle.updateUI(); };
     </script>
 </body>
 </html>
