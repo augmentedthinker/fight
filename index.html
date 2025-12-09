@@ -37,27 +37,59 @@
         .text-glow { text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
         .active-turn .split-image { transform: scale(1.1); filter: brightness(1.1); }
         .inactive-turn .split-image { filter: grayscale(0.8) brightness(0.5); }
-        .taking-damage { animation: damage-flash 0.3s; }
-        @keyframes damage-flash { 50% { filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); } }
+        
+        /* Damage Flash Animation */
+        .taking-damage .split-image { animation: damage-shake 0.4s cubic-bezier(.36,.07,.19,.97) both; filter: sepia(1) hue-rotate(-50deg) saturate(5); }
+        @keyframes damage-shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0) scale(1.1); }
+            20%, 80% { transform: translate3d(4px, 0, 0) scale(1.1); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0) scale(1.1); }
+            40%, 60% { transform: translate3d(8px, 0, 0) scale(1.1); }
+        }
+
+        /* Floating Text Animations */
+        @keyframes floatUp {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            10% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+            70% { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+            100% { transform: translate(-50%, -150%) scale(0.8); opacity: 0; }
+        }
+        
+        .damage-text {
+            position: absolute; left: 50%; top: 40%;
+            font-family: 'MedievalSharp', cursive; font-weight: 900; 
+            font-size: 8rem; color: #ef4444; 
+            text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            pointer-events: none; animation: floatUp 3s ease-out forwards; z-index: 50;
+            width: 100%; text-align: center;
+        }
+
+        /* Miss Text Style */
+        .miss-text {
+            position: absolute; left: 50%; top: 40%;
+            font-family: 'MedievalSharp', cursive; font-weight: 900; 
+            font-size: 8rem; color: #cbd5e1;
+            text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            pointer-events: none; animation: floatUp 3s ease-out forwards; z-index: 50;
+            width: 100%; text-align: center; opacity: 0.8;
+        }
+        
+        @media (min-width: 768px) {
+            .damage-text, .miss-text { font-size: 10rem; }
+        }
 
         /* --- DICE STYLES --- */
         .die-btn {
             position: relative; width: 52px; height: 52px;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0.2; /* Dim inactive dice significantly */
-            filter: grayscale(1);
-            cursor: not-allowed;
-            transform: scale(0.9);
+            opacity: 0.2; filter: grayscale(1); cursor: not-allowed; transform: scale(0.9);
         }
         @media (min-width: 1024px) { .die-btn { width: 64px; height: 64px; } }
         
         .die-active {
-            opacity: 1; 
-            filter: grayscale(0) drop-shadow(0 0 8px rgba(220, 38, 38, 0.6));
-            transform: scale(1.1); 
-            cursor: pointer; 
-            animation: pulse-glow 2s infinite;
+            opacity: 1; filter: grayscale(0) drop-shadow(0 0 8px rgba(220, 38, 38, 0.6));
+            transform: scale(1.1); cursor: pointer; animation: pulse-glow 2s infinite;
         }
         .die-active:hover { transform: scale(1.2); }
         
@@ -66,7 +98,7 @@
             50% { filter: drop-shadow(0 0 15px rgba(220, 38, 38, 0.8)); }
         }
         @keyframes roll { 0% { transform: rotate(0deg); } 25% { transform: rotate(15deg); } 75% { transform: rotate(-15deg); } }
-        .rolling { animation: roll 0.2s infinite; opacity: 1; filter: grayscale(0); }
+        .rolling { animation: roll 0.6s infinite; opacity: 1; filter: grayscale(0); }
         
         .die-shape { fill: #b91c1c; stroke: rgba(255,255,255,0.6); stroke-width: 1.5; stroke-linejoin: round; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
         .die-inner { fill: none; stroke: rgba(255,255,255,0.4); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
@@ -120,38 +152,58 @@
 
     <script>
         // --- ASSETS & DATA ---
+        // Added 'wounded' variations to images
         const IMAGES = {
             intro: ["https://image.pollinations.ai/prompt/epic%20fantasy%20book%20cover%20art%201970s%20style%2C%20warrior%20and%20wizard%20looking%20at%20a%20glowing%20tavern%20in%20distance%2C%20frank%20frazetta%20style%2C%20oil%20painting%2C%20dramatic%20lighting%2C%20vibrant%20orange%20and%20purple%20sky?width=1024&height=1024&nologin=true&seed=101"],
             difficulty: ["https://image.pollinations.ai/prompt/fantasy%20armory%20with%20rusty%20and%20golden%20weapons%20on%20wall%201970s%20dnd%20art%20oil%20painting?width=1024&height=1024&nologin=true&seed=150"],
-            char_select: ["https://image.pollinations.ai/prompt/fantasy%20rpg%20character%20selection%20warrior%20and%20wizard%20standing%20in%20a%20stone%20hall%20armory%2C%201970s%20d%26d%20art%20style%2C%20oil%20painting%2C%20dramatic%20lighting?width=1024&height=1024&nologin=true&seed=202"],
+            char_select: ["https://image.pollinations.ai/prompt/fantasy%20rpg%20character%20selection%20warrior%20and%20wizard%20standing%20in%20a%20stone%20hall%20armory%2C%201970s%20d%26d%20art%20style%2C%20oil%20painting%20dramatic%20lighting?width=1024&height=1024&nologin=true&seed=202"],
+            
             warrior_bg: ["https://image.pollinations.ai/prompt/fantasy%20warrior%20portrait%20rugged%20face%20scarred%20armor%20heroic%20lighting%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=99"],
+            warrior_wounded: ["https://image.pollinations.ai/prompt/fantasy%20warrior%20portrait%20injured%20bleeding%20broken%20armor%20exhausted%20battle%20damage%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=99"],
+            
             wizard_bg: ["https://image.pollinations.ai/prompt/fantasy%20wizard%20portrait%20mystical%20glowing%20eyes%20runes%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=404"],
+            wizard_wounded: ["https://image.pollinations.ai/prompt/fantasy%20wizard%20portrait%20injured%20bleeding%20torn%20robes%20exhausted%20magical%20burns%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=404"],
+            
             forest: ["https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=1024&auto=format&fit=crop"],
             mountain: ["https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1024&auto=format&fit=crop"],
+            
             ogre_intro: ["https://image.pollinations.ai/prompt/fearsome%20ogre%20portrait%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true&seed=505"],
+            ogre_wounded: ["https://image.pollinations.ai/prompt/fearsome%20ogre%20portrait%20injured%20bleeding%20open%20wounds%20angry%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true&seed=505"],
+            
             troll_intro: ["https://image.pollinations.ai/prompt/menacing%20troll%20portrait%20blue%20skin%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true&seed=606"],
+            troll_wounded: ["https://image.pollinations.ai/prompt/menacing%20troll%20portrait%20injured%20bleeding%20green%20blood%20cuts%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true&seed=606"],
+            
             traveler: ["https://image.pollinations.ai/prompt/fantasy%20victory%20scene%20treasure%20chest%20overflowing%20gold%20coins%20magic%20items%20sunrise%20background%201970s%20oil%20painting%20style?width=1024&height=1024&nologin=true&seed=777"], 
-            town: ["https://image.pollinations.ai/prompt/cozy%20medieval%20tavern%20interior%20with%20warm%20fireplace%20and%20pints%20of%20ale%2C%20fantasy%20art%20oil%20painting%2C%20highly%20detailed%2C%20rustic%20atmosphere?width=1024&height=1024&nologin=true&seed=45"],
+            
+            // UPDATED: Lively, celebratory pub scene
+            town: ["https://image.pollinations.ai/prompt/fantasy%20tavern%20party%20scene%2C%20warrior%20and%20wizard%20surrounded%20by%20beautiful%20barmaids%20and%20cheering%20crowd%2C%20magical%20lights%20and%20ale%20flowing%2C%20fantasy%20celebration%20art%20oil%20painting%2C%20vibrant%20and%20cheerful?width=1024&height=1024&nologin=true&seed=45"],
+            
             game_over: ["https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=1024&auto=format&fit=crop"]
         };
 
         const DATA = {
-            ogre: { name: 'Forest Ogre', level: 2, hp: 45, max: 45, ac: 12, ab: 2, dmgDie: 6, dmgMod: 2, weapon: 'Greatclub', bg: 'ogre_intro' }, 
-            troll: { name: 'Cave Troll', level: 4, hp: 55, max: 55, ac: 13, ab: 3, dmgDie: 8, dmgMod: 1, weapon: 'Rending Claws', bg: 'troll_intro' },
-            warrior: { name: 'Warrior', level: 1, hp: 50, max: 50, ac: 15, ab: 3, dmgDie: 8, dmgMod: 2, weapon: 'Longsword', icon: 'sword', bg: 'warrior_bg', desc: 'Master of steel' },
-            wizard: { name: 'Wizard', level: 1, hp: 40, max: 40, ac: 11, ab: 5, dmgDie: 10, dmgMod: 3, weapon: 'Arcane Staff', icon: 'scroll', bg: 'wizard_bg', desc: 'Master of arcane' }
+            ogre: { name: 'Forest Ogre', level: 2, hp: 45, max: 45, ac: 12, ab: 2, dmgDie: 6, dmgMod: 2, weapon: 'Greatclub', bg: 'ogre_intro', wounded_bg: 'ogre_wounded' }, 
+            troll: { name: 'Cave Troll', level: 4, hp: 55, max: 55, ac: 13, ab: 3, dmgDie: 8, dmgMod: 1, weapon: 'Rending Claws', bg: 'troll_intro', wounded_bg: 'troll_wounded' },
+            warrior: { name: 'Warrior', level: 1, hp: 50, max: 50, ac: 15, ab: 3, dmgDie: 8, dmgMod: 2, weapon: 'Longsword', icon: 'sword', bg: 'warrior_bg', wounded_bg: 'warrior_wounded', desc: 'Master of steel' },
+            wizard: { name: 'Wizard', level: 1, hp: 40, max: 40, ac: 11, ab: 5, dmgDie: 10, dmgMod: 3, weapon: 'Arcane Staff', icon: 'scroll', bg: 'wizard_bg', wounded_bg: 'wizard_wounded', desc: 'Master of arcane' }
         };
 
         // --- BATTLE ENGINE ---
         const battle = {
-            state: { hero: null, enemy: null, turn: 'player', phase: 'attack', lastCrit: false, isOver: false },
+            state: { hero: null, enemy: null, turn: 'player', phase: 'attack', lastCrit: false, isOver: false, heroWounded: false, enemyWounded: false },
 
             init(heroData, enemyData) {
                 this.state = {
                     hero: { ...heroData, currentHp: heroData.max },
                     enemy: { ...enemyData, currentHp: enemyData.max },
-                    turn: 'player', phase: 'attack', lastCrit: false, isOver: false
+                    turn: 'player', phase: 'attack', lastCrit: false, isOver: false,
+                    heroWounded: false, enemyWounded: false
                 };
+                
+                // Preload wounded images immediately
+                const preloadHero = new Image(); preloadHero.src = IMAGES[heroData.wounded_bg][0];
+                const preloadEnemy = new Image(); preloadEnemy.src = IMAGES[enemyData.wounded_bg][0];
+
                 this.renderBattleInterface();
                 this.updateUI();
                 this.setTurnUI('player', 'attack');
@@ -159,13 +211,38 @@
                 lucide.createIcons();
             },
 
+            // Click Handler for VS Screen
+            startFight() {
+                const el = document.getElementById('vs-overlay');
+                if(el) {
+                    el.classList.add('opacity-0', 'pointer-events-none');
+                    setTimeout(() => el.remove(), 500);
+                }
+            },
+
             renderBattleInterface() {
                 const container = document.getElementById('scene-container');
                 container.innerHTML = `
                 <div id="battle-frame" class="relative w-full max-w-[420px] h-[80vh] md:h-[90vh] bg-slate-950 shadow-2xl flex flex-col overflow-hidden rounded-[2rem] border-[4px] border-slate-800 ring-1 ring-white/10 lg:rounded-[3rem] lg:border-[8px] animate-in fade-in zoom-in duration-500">
+                    
+                    <!-- START FIGHT OVERLAY -->
+                    <div id="vs-overlay" onclick="battle.startFight()" class="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm transition-all duration-500 hover:bg-black/70">
+                        <h1 class="text-9xl font-black text-red-600 font-old animate-pulse drop-shadow-[0_0_25px_rgba(220,38,38,0.8)] scale-150 transform mb-4">VS</h1>
+                        <p class="text-white/90 font-sans text-lg tracking-[0.5em] font-bold animate-bounce border border-white/20 px-6 py-2 rounded-full bg-white/5">TAP TO FIGHT</p>
+                    </div>
+
                     <div class="h-[55%] w-full flex relative bg-slate-900">
                         <div id="hero-panel" class="split-panel active-turn border-r-4 border-slate-900">
-                            <img src="${IMAGES[this.state.hero.bg][0]}" class="split-image" alt="Hero">
+                            <!-- Loader -->
+                            <div class="absolute inset-0 flex items-center justify-center bg-slate-900 z-20 transition-opacity duration-300" id="hero-loader">
+                                <div class="flex flex-col items-center gap-2">
+                                    <i data-lucide="loader-2" class="w-8 h-8 text-blue-500 animate-spin"></i>
+                                    <span class="text-xs text-blue-500 font-bold uppercase tracking-widest">Summoning Hero</span>
+                                </div>
+                            </div>
+                            <!-- Image with ID for Safe Loading -->
+                            <img id="hero-img" src="${IMAGES[this.state.hero.bg][0]}" class="split-image opacity-0 transition-opacity duration-700" alt="Hero">
+                            
                             <div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
                                 <div class="flex justify-between items-end">
                                     <div>
@@ -177,15 +254,28 @@
                                 <div class="hp-track h-4 border-2"><div id="hero-bar" class="hp-fill bg-blue-600" style="width: 100%"></div></div>
                                 <div class="mt-2 flex gap-1">
                                     <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AC ${this.state.hero.ac}</span>
+                                    <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AB +${this.state.hero.ab}</span>
                                     <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">${this.state.hero.weapon} (1d${this.state.hero.dmgDie}+${this.state.hero.dmgMod})</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
+                        
+                        <!-- Small VS Badge (Behind Overlay) -->
+                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none opacity-50">
                             <span class="text-4xl md:text-6xl font-black text-white italic text-glow drop-shadow-2xl" style="font-family: serif;">VS</span>
                         </div>
+                        
                         <div id="enemy-panel" class="split-panel inactive-turn border-l-4 border-slate-900">
-                            <img src="${IMAGES[this.state.enemy.bg][0]}" class="split-image" alt="Enemy">
+                            <!-- Loader -->
+                            <div class="absolute inset-0 flex items-center justify-center bg-slate-900 z-20 transition-opacity duration-300" id="enemy-loader">
+                                <div class="flex flex-col items-center gap-2">
+                                    <i data-lucide="loader-2" class="w-8 h-8 text-red-500 animate-spin"></i>
+                                    <span class="text-xs text-red-500 font-bold uppercase tracking-widest">Summoning Enemy</span>
+                                </div>
+                            </div>
+                            <!-- Image with ID for Safe Loading -->
+                            <img id="enemy-img" src="${IMAGES[this.state.enemy.bg][0]}" class="split-image opacity-0 transition-opacity duration-700" alt="Enemy">
+
                             <div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
                                 <div class="flex justify-between items-end">
                                     <div>
@@ -196,6 +286,7 @@
                                 </div>
                                 <div class="hp-track h-4 border-2"><div id="enemy-bar" class="hp-fill bg-red-600" style="width: 100%"></div></div>
                                 <div class="mt-2 flex gap-1 justify-end">
+                                    <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AB +${this.state.enemy.ab}</span>
                                     <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AC ${this.state.enemy.ac}</span>
                                     <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">${this.state.enemy.weapon} (1d${this.state.enemy.dmgDie}+${this.state.enemy.dmgMod})</span>
                                 </div>
@@ -220,9 +311,45 @@
                         </div>
                     </div>
                 </div>`;
+
+                // --- ROBUST IMAGE LOADING HANDLER ---
+                const handleImageLoad = (imgId, loaderId) => {
+                    const img = document.getElementById(imgId);
+                    const loader = document.getElementById(loaderId);
+                    if(!img || !loader) return;
+
+                    const onLoaded = () => {
+                        img.classList.remove('opacity-0');
+                        loader.classList.add('opacity-0', 'pointer-events-none');
+                    };
+
+                    const onError = () => {
+                        loader.innerHTML = `
+                            <div class="flex flex-col items-center text-red-500">
+                                <i data-lucide="alert-triangle" class="w-8 h-8 mb-2"></i>
+                                <span class="text-[10px] uppercase font-bold">Image Failed</span>
+                            </div>
+                        `;
+                        lucide.createIcons();
+                    };
+
+                    if (img.complete && img.naturalHeight !== 0) {
+                        onLoaded();
+                    } else {
+                        img.onload = onLoaded;
+                        img.onerror = onError;
+                    }
+                };
+
+                // Trigger handlers for both images immediately after insertion
+                handleImageLoad('hero-img', 'hero-loader');
+                handleImageLoad('enemy-img', 'enemy-loader');
             },
 
             rollUserDie(sides) {
+                // Prevent rolling if the VS screen is still up
+                if (document.getElementById('vs-overlay')) return;
+                
                 if (this.state.isOver || this.state.turn !== 'player') return;
                 
                 // --- STRICT VALIDATION ---
@@ -235,7 +362,7 @@
                 setTimeout(() => {
                     if (this.state.phase === 'attack') this.resolvePlayerAttack();
                     else if (this.state.phase === 'damage') this.resolvePlayerDamage();
-                }, 600);
+                }, 2000); // Wait 2s for dice roll
             },
 
             resolvePlayerAttack() {
@@ -251,7 +378,8 @@
                     this.setTurnUI('player', 'damage'); 
                 } else {
                     this.log(`MISSED! Rolled ${roll} + ${this.state.hero.ab} = ${total} (vs AC ${this.state.enemy.ac})`, 'text-red-400');
-                    this.startEnemyTurn();
+                    this.triggerMiss('enemy'); // Show MISS on enemy
+                    setTimeout(() => this.startEnemyTurn(), 2000); // Delay before enemy acts
                 }
             },
 
@@ -261,11 +389,16 @@
                 dmg += this.state.hero.dmgMod;
 
                 this.state.enemy.currentHp = Math.max(0, this.state.enemy.currentHp - dmg);
-                this.triggerDamage('enemy');
+                this.triggerDamage('enemy', dmg); // PASS DMG AMOUNT
                 this.updateUI();
-                this.log(`DEALT ${dmg} DAMAGE!`, 'text-white');
+                
+                let msg = `DEALT ${dmg} DAMAGE! (Rolled ${dmg - this.state.hero.dmgMod}`; // Simplified math display
+                if(this.state.lastCrit) msg += ` (Crit)`;
+                msg += ` + ${this.state.hero.dmgMod})`;
+                
+                this.log(msg, 'text-white');
 
-                if (this.state.enemy.currentHp <= 0) setTimeout(() => this.endGame(true), 1500);
+                if (this.state.enemy.currentHp <= 0) setTimeout(() => this.endGame(true), 3500);
                 else this.startEnemyTurn();
             },
 
@@ -283,7 +416,7 @@
                         const isHit = !((roll === 1) || (total < this.state.hero.ac));
 
                         if (isHit) {
-                            this.log(`ENEMY HITS! Rolled ${roll}`, 'text-red-400');
+                            this.log(`ENEMY HITS! Rolled ${roll} + ${this.state.enemy.ab} = ${total}`, 'text-red-400');
                             setTimeout(() => {
                                 this.animateDie(this.state.enemy.dmgDie);
                                 setTimeout(() => {
@@ -292,19 +425,25 @@
                                     dmg += this.state.enemy.dmgMod;
 
                                     this.state.hero.currentHp = Math.max(0, this.state.hero.currentHp - dmg);
-                                    this.triggerDamage('hero');
+                                    this.triggerDamage('hero', dmg); // PASS DMG AMOUNT
                                     this.updateUI();
-                                    this.log(`TOOK ${dmg} DAMAGE!`, 'text-red-500');
+                                    
+                                    let msg = `TOOK ${dmg} DAMAGE! (Rolled ${dmg - this.state.enemy.dmgMod}`;
+                                    if(isCrit) msg += ` (Crit)`;
+                                    msg += ` + ${this.state.enemy.dmgMod})`;
+                                    
+                                    this.log(msg, 'text-red-500');
 
-                                    if (this.state.hero.currentHp <= 0) setTimeout(() => this.endGame(false), 1500);
-                                    else setTimeout(() => this.startPlayerTurn(), 2000);
-                                }, 600);
-                            }, 1000);
+                                    if (this.state.hero.currentHp <= 0) setTimeout(() => this.endGame(false), 3500);
+                                    else setTimeout(() => this.startPlayerTurn(), 3500);
+                                }, 2000); // Damage roll wait
+                            }, 2000); // Wait for hit text
                         } else {
-                            this.log(`ENEMY MISSED! Rolled ${roll}`, 'text-slate-400');
-                            setTimeout(() => this.startPlayerTurn(), 2000);
+                            this.log(`ENEMY MISSED! Rolled ${roll} + ${this.state.enemy.ab} = ${total} (vs AC ${this.state.hero.ac})`, 'text-slate-400');
+                            this.triggerMiss('hero'); // Show MISS on hero
+                            setTimeout(() => this.startPlayerTurn(), 3000); // Delay before player turn
                         }
-                    }, 600);
+                    }, 2000); // Attack roll wait
                 }, 1000);
             },
 
@@ -346,10 +485,35 @@
             },
 
             updateUI() {
+                // Update HP numbers
                 document.getElementById('hero-hp-text').innerText = this.state.hero.currentHp;
                 document.getElementById('enemy-hp-text').innerText = this.state.enemy.currentHp;
-                document.getElementById('hero-bar').style.width = (this.state.hero.currentHp / this.state.hero.max * 100) + '%';
-                document.getElementById('enemy-bar').style.width = (this.state.enemy.currentHp / this.state.enemy.max * 100) + '%';
+                
+                // Update HP Bars
+                const heroPct = (this.state.hero.currentHp / this.state.hero.max);
+                const enemyPct = (this.state.enemy.currentHp / this.state.enemy.max);
+                
+                document.getElementById('hero-bar').style.width = (heroPct * 100) + '%';
+                document.getElementById('enemy-bar').style.width = (enemyPct * 100) + '%';
+
+                // --- DYNAMIC WOUNDED STATE CHECK ---
+                if (heroPct <= 0.5 && !this.state.heroWounded) {
+                    this.state.heroWounded = true;
+                    document.getElementById('hero-img').src = IMAGES[this.state.hero.wounded_bg][0];
+                } else if (heroPct > 0.5 && this.state.heroWounded) {
+                    // Safety check if healing was implemented (not currently, but good practice)
+                    this.state.heroWounded = false;
+                    document.getElementById('hero-img').src = IMAGES[this.state.hero.bg][0];
+                }
+
+                if (enemyPct <= 0.5 && !this.state.enemyWounded) {
+                    this.state.enemyWounded = true;
+                    document.getElementById('enemy-img').src = IMAGES[this.state.enemy.wounded_bg][0];
+                } else if (enemyPct > 0.5 && this.state.enemyWounded) {
+                    // Safety check if healing was implemented
+                    this.state.enemyWounded = false;
+                    document.getElementById('enemy-img').src = IMAGES[this.state.enemy.bg][0];
+                }
             },
 
             animateDie(sides) {
@@ -358,14 +522,32 @@
                     el.classList.add('rolling'); 
                     setTimeout(() => {
                         el.classList.remove('rolling');
-                    }, 500);
+                    }, 2000);
                 }
             },
 
-            triggerDamage(who) {
-                const el = document.getElementById(`${who}-panel`);
-                el.classList.add('taking-damage');
-                setTimeout(() => el.classList.remove('taking-damage'), 300);
+            triggerDamage(who, amount) {
+                const panel = document.getElementById(`${who}-panel`);
+                // Flash red
+                panel.classList.add('taking-damage');
+                setTimeout(() => panel.classList.remove('taking-damage'), 400);
+
+                // Floating Text
+                const text = document.createElement('div');
+                text.className = 'damage-text';
+                text.innerText = `-${amount}`;
+                panel.appendChild(text);
+                setTimeout(() => text.remove(), 3000);
+            },
+
+            // New helper to trigger MISS text
+            triggerMiss(who) {
+                const panel = document.getElementById(`${who}-panel`);
+                const text = document.createElement('div');
+                text.className = 'miss-text';
+                text.innerText = "MISS";
+                panel.appendChild(text);
+                setTimeout(() => text.remove(), 2000);
             },
 
             log(msg, color) {
@@ -553,7 +735,8 @@
                                     <div class="grid grid-cols-2 gap-x-2 text-xs font-sans text-slate-300 mt-1">
                                         <span><span class="text-slate-500">HP:</span> ${d.max}</span>
                                         <span><span class="text-slate-500">AC:</span> ${d.ac}</span>
-                                        <span class="col-span-2 truncate"><span class="text-slate-500">Wpn:</span> ${d.weapon} (1d${d.dmgDie}+${d.dmgMod})</span>
+                                        <span><span class="text-slate-500">AB:</span> +${d.ab}</span>
+                                        <span class="col-span-2 truncate mt-1"><span class="text-slate-500">Wpn:</span> ${d.weapon} (1d${d.dmgDie}+${d.dmgMod})</span>
                                     </div>
                                 </div>
                             </div>
@@ -573,11 +756,20 @@
                 } else if (s.scene === 'path_select') {
                     h = `<div class="flex flex-col gap-6 w-full max-w-md px-4"><h2 class="text-4xl text-yellow-500 font-bold text-center drop-shadow-xl font-old">Choose Path</h2><p class="glass-panel p-4 rounded-xl text-slate-200 text-center text-sm leading-relaxed border border-white/10 font-old">The road ahead forks. To the left, ancient woods whisper warnings. To the right, mountains loom cold and silent.</p><div class="grid gap-4"><button onclick="game.selectPath('forest')" class="glass-panel p-6 rounded-xl hover:border-green-500 transition-all text-left group"><h3 class="text-2xl font-bold text-green-100 mb-1 group-hover:text-green-400 font-old tracking-wide">Dark Forest</h3><p class="text-xs text-slate-400 font-sans">Danger: Ogre</p></button><button onclick="game.selectPath('mountain')" class="glass-panel p-6 rounded-xl hover:border-indigo-500 transition-all text-left group"><h3 class="text-2xl font-bold text-indigo-100 mb-1 group-hover:text-indigo-400 font-old tracking-wide">Rocky Pass</h3><p class="text-xs text-slate-400 font-sans">Danger: Troll</p></button></div></div>`;
                 } else if (s.scene === 'monster_intro') {
-                    h = `<div class="flex flex-col items-center justify-center gap-8 max-w-md px-4 text-center w-full"><h2 class="text-6xl text-red-600 font-black drop-shadow-2xl font-old tracking-wider animate-pulse">AMBUSH!</h2><div class="glass-panel p-6 rounded-xl border-red-500/30 bg-black/40"><p class="text-slate-200 text-xl leading-relaxed font-old">A <span class="text-red-400 font-bold">Lvl ${s.enemy.level} ${s.enemy.name}</span> emerges from the shadows!</p></div>${btn("updateScene('combat')", 'Roll for Initiative', 'swords')}</div>`;
+                    h = `<div class="flex flex-col items-center justify-center gap-8 max-w-md px-4 text-center w-full"><h2 class="text-6xl text-red-600 font-black drop-shadow-2xl font-old tracking-wider animate-pulse">AMBUSH</h2><div class="glass-panel p-6 rounded-xl border-red-500/30 bg-black/40"><p class="text-slate-200 text-xl leading-relaxed font-old">A <span class="text-red-400 font-bold">Lvl ${s.enemy.level} ${s.enemy.name}</span> emerges from the shadows!</p></div>${btn("updateScene('combat')", 'Roll for Initiative', 'swords')}</div>`;
                 } else if (s.scene === 'traveler') {
                     h = `<div class="text-center px-4 max-w-md flex flex-col items-center"><div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center ring-4 ring-yellow-500/50 mx-auto mb-6 shadow-2xl"><i data-lucide="trophy" class="w-10 h-10 text-yellow-400"></i></div><h2 class="text-6xl font-bold text-white mb-4 font-old drop-shadow-xl">Victory!</h2><div class="glass-panel p-6 rounded-xl border-yellow-500/30 text-yellow-100 text-lg mb-6 font-old">"You have triumphed! The treasures of the path are yours."</div>${btn("updateScene('town')", "Go to Tavern", "beer")}</div>`;
                 } else if (s.scene === 'town') {
-                    h = `<div class="text-center px-4 max-w-md flex flex-col items-center"><div class="flex justify-center gap-4 mb-6 text-yellow-500"><i data-lucide="beer" class="w-12 h-12"></i></div><h1 class="text-5xl font-extrabold text-yellow-400 mb-4 font-old">The Golden Pint</h1><p class="glass-panel p-4 rounded-xl text-slate-200 mb-6 font-old text-lg">Warm hearth, cold ale.</p>${btn("home()", "Replay", "rotate-ccw")}</div>`;
+                    // UPDATED TOWN SCENE: Highly celebratory description
+                    h = `<div class="text-center px-4 max-w-md flex flex-col items-center">
+                            <div class="flex justify-center gap-4 mb-6 text-yellow-500"><i data-lucide="crown" class="w-12 h-12"></i><i data-lucide="beer" class="w-12 h-12"></i></div>
+                            <h1 class="text-5xl font-extrabold text-yellow-400 mb-4 font-old">The Golden Pint</h1>
+                            <p class="glass-panel p-4 rounded-xl text-slate-200 mb-6 font-old text-lg leading-relaxed">
+                                You are the hero of the hour! Ale flows freely as cheerful barmaids surround you. 
+                                The entire tavern raises a pint in your honor, a true hero's welcome after a journey well fought.
+                            </p>
+                            ${btn("home()", "Replay", "rotate-ccw")}
+                        </div>`;
                 } else if (s.scene === 'game_over') {
                     h = `<div class="text-center px-4 flex flex-col items-center"><i data-lucide="skull" class="w-24 h-24 text-red-600 mx-auto mb-6"></i><h1 class="text-6xl font-black text-red-600 mb-6 font-old">You Died</h1>${btn("home()", "Try Again", "rotate-ccw")}</div>`;
                 }
