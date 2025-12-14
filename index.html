@@ -112,6 +112,9 @@
 
     <!-- AUDIO PLAYERS -->
     <audio id="narrative-player" preload="auto"></audio>
+    <audio id="bg-player" loop>
+        <source src="Warm Tavern.mp3" type="audio/mpeg">
+    </audio>
 
     <!-- CINEMATIC VIDEO OVERLAY (Generic) -->
     <div id="video-overlay" class="fixed inset-0 z-[60] bg-black flex items-center justify-center transition-opacity duration-1000 hidden opacity-0">
@@ -147,6 +150,9 @@
         <div class="flex gap-2 pointer-events-auto">
             <button onclick="game.back()" class="glass-panel p-2 rounded-lg hover:bg-white/10 transition-colors text-slate-300" title="Go Back">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </button>
+            <button onclick="game.toggleSound()" class="glass-panel p-2 rounded-lg hover:bg-white/10 transition-colors text-slate-300" id="global-mute-btn" title="Toggle Sound">
+                <i data-lucide="volume-x" class="w-4 h-4"></i>
             </button>
             <div class="glass-panel p-2 rounded-lg flex items-center gap-2 text-yellow-500/80 font-bold text-xs pointer-events-none font-old tracking-widest">
                 <i data-lucide="dices" class="w-4 h-4"></i><span>RPG ADV</span>
@@ -586,22 +592,42 @@
             toggleSound() {
                 this.state.soundEnabled = !this.state.soundEnabled;
                 const vid = document.getElementById('game-video');
-                // Attempt to "wake up" audio context if needed, though interaction with button is usually enough
+                const bgAudio = document.getElementById('bg-player');
+                
+                // 1. Handle Video
                 if(vid) {
                     vid.muted = !this.state.soundEnabled;
                 }
                 
-                // NEW: Handle narration toggle
-                const audio = document.getElementById('narrative-player');
-                if (this.state.soundEnabled) {
-                    // If enabling sound, try to play current scene narration
-                    this.playNarrative(this.state.scene);
-                } else {
-                    // If disabling, silence everything
-                    if(audio) audio.pause();
+                // 2. Handle Background Music
+                if (bgAudio) {
+                    if (this.state.soundEnabled) {
+                        bgAudio.volume = 0.15; // Play lightly in background
+                        bgAudio.play().catch(e => console.log("BG Audio play failed (interaction needed):", e));
+                    } else {
+                        bgAudio.pause();
+                    }
                 }
 
-                this.renderNarrative(); // Re-render to update button state
+                // 3. Handle Narration
+                if (this.state.soundEnabled) {
+                    this.playNarrative(this.state.scene);
+                } else {
+                    const narrativeAudio = document.getElementById('narrative-player');
+                    if(narrativeAudio) narrativeAudio.pause();
+                }
+
+                // 4. Update UI
+                this.updateGlobalMuteIcon();
+                if (this.state.scene === 'intro') this.renderNarrative(); // Update intro button
+            },
+
+            updateGlobalMuteIcon() {
+                const icon = document.querySelector('#global-mute-btn i');
+                if(icon) {
+                    icon.setAttribute('data-lucide', this.state.soundEnabled ? 'volume-2' : 'volume-x');
+                    lucide.createIcons();
+                }
             },
 
             playNarrative(scene) {
@@ -913,4 +939,4 @@
         window.onload = () => game.init();
     </script>
 </body>
-    </html>
+            </html>
