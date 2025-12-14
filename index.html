@@ -298,7 +298,10 @@
 
             renderBattleInterface() {
                 const container = document.getElementById('scene-container');
-                // FULL SCREEN, RESPONSIVE, LIFTED UI
+                
+                // FIXED: Layout uses flex-col. 
+                // 1. Top panel uses 'flex-1' (takes all remaining space).
+                // 2. Bottom panel uses 'shrink-0' (stays fixed size).
                 container.innerHTML = `
                 <div id="battle-frame" class="fixed inset-0 w-full h-full bg-slate-950 flex flex-col overflow-hidden">
                     
@@ -311,79 +314,92 @@
                     </div>
 
                     <!-- Top Split Panel (Images) -->
-                    <div class="h-[65%] w-full flex md:flex-row flex-col relative bg-slate-900 min-h-0">
-                        <div id="hero-panel" class="split-panel active-turn relative w-full md:w-1/2 h-1/2 md:h-full">
+                    <!-- FIXED: Changed h-[65%] to flex-1 min-h-0 to fill available space dynamically -->
+                    <div class="flex-1 w-full flex md:flex-row flex-col relative bg-slate-900 min-h-0">
+                        
+                        <!-- HERO PANEL -->
+                        <!-- FIXED: Added border-b for mobile separation -->
+                        <div id="hero-panel" class="split-panel active-turn relative w-full md:w-1/2 h-1/2 md:h-full border-b-2 md:border-b-0 md:border-r-2 border-black">
                             <div class="absolute inset-0 flex items-center justify-center bg-slate-900 z-20 transition-opacity duration-300" id="hero-loader">
                                 <div class="flex flex-col items-center gap-2"><i data-lucide="loader-2" class="w-8 h-8 text-blue-500 animate-spin"></i><span class="text-xs text-blue-500 font-bold uppercase tracking-widest">Summoning Hero</span></div>
                             </div>
                             <img id="hero-img" src="${IMAGES[this.state.hero.bg][0]}" class="split-image opacity-0 transition-opacity duration-700" alt="Hero">
                             
-                            <div class="absolute top-4 left-4 z-10 stats-box max-w-[150px]">
+                            <!-- Stats (Left) -->
+                            <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10 stats-box max-w-[150px]">
                                 <div class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">STATS</div>
                                 <div class="grid grid-cols-2 gap-x-2 gap-y-1">
                                     <span>AC: <span class="stats-highlight text-blue-200">${this.state.hero.ac}</span></span>
                                     <span>Hit: <span class="stats-highlight text-blue-200">+${this.state.hero.ab}</span></span>
-                                    <span class="col-span-2 border-t border-white/10 pt-1 mt-1 text-xs text-blue-100">${this.state.hero.weapon}</span>
-                                    <span class="col-span-2 text-[10px]">Dmg: 1d${this.state.hero.dmgDie}+${this.state.hero.dmgMod}</span>
                                 </div>
                             </div>
 
-                            <div class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
+                            <!-- Name & HP (Bottom) -->
+                            <div class="absolute inset-x-0 bottom-0 p-2 md:p-4 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
                                 <div class="flex justify-between items-end mb-1">
-                                    <div><div class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Lvl ${this.state.hero.level} Hero</div><span class="text-2xl font-bold text-blue-100 text-glow tracking-wider">${this.state.hero.name.toUpperCase()}</span></div>
+                                    <div>
+                                        <div class="text-[8px] md:text-[10px] font-bold text-blue-300 uppercase tracking-widest">Lvl ${this.state.hero.level} Hero</div>
+                                        <span class="text-lg md:text-2xl font-bold text-blue-100 text-glow tracking-wider">${this.state.hero.name.toUpperCase()}</span>
+                                    </div>
                                     <div class="text-right">
-                                        <div class="text-[10px] text-slate-400 font-bold uppercase">Health</div>
-                                        <span id="hero-hp-text" class="text-2xl font-bold text-white text-glow">${this.state.hero.currentHp}/${this.state.hero.max}</span>
+                                        <span id="hero-hp-text" class="text-lg md:text-2xl font-bold text-white text-glow">${this.state.hero.currentHp}/${this.state.hero.max}</span>
                                     </div>
                                 </div>
-                                <div class="hp-track h-3 bg-slate-800 border border-slate-700"><div id="hero-bar" class="hp-fill bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.6)]" style="width: 100%"></div></div>
+                                <div class="hp-track h-2 md:h-3 bg-slate-800 border border-slate-700"><div id="hero-bar" class="hp-fill bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.6)]" style="width: 100%"></div></div>
                             </div>
                         </div>
 
-                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none opacity-50"><span class="text-6xl md:text-8xl font-black text-white italic text-glow drop-shadow-2xl" style="font-family: serif;">VS</span></div>
+                        <!-- VS Text (Center) -->
+                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none opacity-50">
+                            <span class="text-4xl md:text-8xl font-black text-white italic text-glow drop-shadow-2xl" style="font-family: serif;">VS</span>
+                        </div>
                         
+                        <!-- ENEMY PANEL -->
                         <div id="enemy-panel" class="split-panel inactive-turn relative w-full md:w-1/2 h-1/2 md:h-full">
                             <div class="absolute inset-0 flex items-center justify-center bg-slate-900 z-20 transition-opacity duration-300" id="enemy-loader">
                                 <div class="flex flex-col items-center gap-2"><i data-lucide="loader-2" class="w-8 h-8 text-red-500 animate-spin"></i><span class="text-xs text-red-500 font-bold uppercase tracking-widest">Summoning Enemy</span></div>
                             </div>
                             <img id="enemy-img" src="${IMAGES[this.state.enemy.bg][0]}" class="split-image opacity-0 transition-opacity duration-700" alt="Enemy">
                             
-                            <div class="absolute top-4 right-4 z-10 stats-box max-w-[150px] text-right">
+                            <!-- Stats (Right) -->
+                            <div class="absolute top-2 right-2 md:top-4 md:right-4 z-10 stats-box max-w-[150px] text-right">
                                 <div class="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1">STATS</div>
                                 <div class="grid grid-cols-2 gap-x-2 gap-y-1">
                                     <span>Hit: <span class="stats-highlight text-red-200">+${this.state.enemy.ab}</span></span>
                                     <span>AC: <span class="stats-highlight text-red-200">${this.state.enemy.ac}</span></span>
-                                    <span class="col-span-2 border-t border-white/10 pt-1 mt-1 text-xs text-red-100">${this.state.enemy.weapon}</span>
-                                    <span class="col-span-2 text-[10px]">Dmg: 1d${this.state.enemy.dmgDie}+${this.state.enemy.dmgMod}</span>
                                 </div>
                             </div>
 
-                            <div class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
+                            <!-- Name & HP (Bottom) -->
+                            <div class="absolute inset-x-0 bottom-0 p-2 md:p-4 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
                                 <div class="flex justify-between items-end mb-1">
-                                    <div><div class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Lvl ${this.state.enemy.level} Enemy</div><span class="text-2xl font-bold text-red-100 text-glow tracking-wider">${this.state.enemy.name.toUpperCase()}</span></div>
+                                    <div>
+                                        <div class="text-[8px] md:text-[10px] font-bold text-red-400 uppercase tracking-widest">Lvl ${this.state.enemy.level} Enemy</div>
+                                        <span class="text-lg md:text-2xl font-bold text-red-100 text-glow tracking-wider">${this.state.enemy.name.toUpperCase()}</span>
+                                    </div>
                                     <div class="text-right">
-                                        <div class="text-[10px] text-slate-400 font-bold uppercase">Health</div>
-                                        <span id="enemy-hp-text" class="text-2xl font-bold text-white text-glow">${this.state.enemy.currentHp}/${this.state.enemy.max}</span>
+                                        <span id="enemy-hp-text" class="text-lg md:text-2xl font-bold text-white text-glow">${this.state.enemy.currentHp}/${this.state.enemy.max}</span>
                                     </div>
                                 </div>
-                                <div class="hp-track h-3 bg-slate-800 border border-slate-700"><div id="enemy-bar" class="hp-fill bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.6)]" style="width: 100%"></div></div>
+                                <div class="hp-track h-2 md:h-3 bg-slate-800 border border-slate-700"><div id="enemy-bar" class="hp-fill bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.6)]" style="width: 100%"></div></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Bottom Controls: Lifted -->
-                    <div class="h-[35%] w-full bg-slate-900 border-t-8 border-slate-800 flex flex-col items-center px-4 pt-2 pb-20 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-40 relative">
+                    <!-- FIXED: Changed height to shrink-0 and auto to accommodate content without squishing -->
+                    <div class="shrink-0 w-full bg-slate-900 border-t-4 md:border-t-8 border-slate-800 flex flex-col items-center px-2 md:px-4 pt-2 pb-6 md:pb-20 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-40 relative">
                         
                         <div class="w-full text-center mb-1 shrink-0">
                             <div id="turn-banner" class="inline-block mb-1 bg-yellow-600 text-black px-8 py-1 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-sm shadow-lg transition-colors duration-300">Your Turn</div>
                             <div id="log-text" class="text-xs md:text-sm text-slate-300 h-6 md:h-8 leading-6 md:leading-8 truncate font-sans tracking-wide">Roll D20 to Attack!</div>
                         </div>
                         
-                        <div class="flex-1 w-full flex items-center justify-between gap-2">
+                        <div class="flex-1 w-full flex items-center justify-between gap-2 max-w-4xl mx-auto">
                             
-                            <!-- LEFT: Auto Button (Lifted) -->
-                            <div class="w-20 md:w-32 flex justify-start items-center h-full">
-                                <button onclick="battle.toggleAuto()" id="auto-btn" class="text-slate-500 hover:text-yellow-400 transition-all text-[10px] md:text-xs uppercase tracking-widest font-bold border border-slate-700 px-3 py-4 rounded-xl hover:bg-slate-800 flex flex-col items-center gap-2 w-full">
+                            <!-- LEFT: Auto Button -->
+                            <div class="w-16 md:w-32 flex justify-start items-center h-full">
+                                <button onclick="battle.toggleAuto()" id="auto-btn" class="text-slate-500 hover:text-yellow-400 transition-all text-[10px] md:text-xs uppercase tracking-widest font-bold border border-slate-700 px-2 py-3 md:px-3 md:py-4 rounded-xl hover:bg-slate-800 flex flex-col items-center gap-1 md:gap-2 w-full">
                                     <i data-lucide="zap" class="w-4 h-4 md:w-6 md:h-6"></i> 
                                     <span>Auto</span>
                                 </button>
@@ -391,7 +407,7 @@
 
                             <!-- CENTER: Dice Array -->
                             <div class="flex-1 flex flex-col items-center justify-center h-full">
-                                <div id="dice-label" class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Select Die</div>
+                                <div id="dice-label" class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 hidden md:block">Select Die</div>
                                 <div class="flex flex-wrap justify-center gap-1 md:gap-3 w-full">
                                     <div id="d4-btn" class="die-btn" onclick="battle.rollUserDie(4)"><svg viewBox="0 0 100 100" class="overflow-visible"><path d="M50 10 L90 80 H10 Z" class="die-shape" /><path d="M50 10 L50 60 L10 80 M50 60 L90 80" class="die-inner" /><text x="50" y="72" text-anchor="middle" class="die-text">4</text></svg></div>
                                     <div id="d6-btn" class="die-btn" onclick="battle.rollUserDie(6)"><svg viewBox="0 0 100 100" class="overflow-visible"><path d="M20 30 L70 30 L70 80 L20 80 Z" class="die-shape" /><path d="M20 30 L40 10 L90 10 L70 30" class="die-shape" /><path d="M70 30 L90 10 L90 60 L70 80" class="die-shape" /><text x="45" y="60" text-anchor="middle" class="die-text">6</text></svg></div>
@@ -402,9 +418,9 @@
                                 </div>
                             </div>
 
-                            <!-- RIGHT: Skip Button (Lifted) -->
-                            <div class="w-20 md:w-32 flex justify-end items-center h-full">
-                                <button onclick="battle.skipFight()" class="text-slate-500 hover:text-blue-400 transition-all text-[10px] md:text-xs uppercase tracking-widest font-bold border border-slate-700 px-3 py-4 rounded-xl hover:bg-slate-800 flex flex-col items-center gap-2 w-full">
+                            <!-- RIGHT: Skip Button -->
+                            <div class="w-16 md:w-32 flex justify-end items-center h-full">
+                                <button onclick="battle.skipFight()" class="text-slate-500 hover:text-blue-400 transition-all text-[10px] md:text-xs uppercase tracking-widest font-bold border border-slate-700 px-2 py-3 md:px-3 md:py-4 rounded-xl hover:bg-slate-800 flex flex-col items-center gap-1 md:gap-2 w-full">
                                     <i data-lucide="fast-forward" class="w-4 h-4 md:w-6 md:h-6"></i>
                                     <span>Skip</span>
                                 </button>
@@ -1066,4 +1082,4 @@
         window.onload = () => game.init();
     </script>
 </body>
-            </html>
+    </html>
