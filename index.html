@@ -179,19 +179,27 @@
 
     <!-- IMMERSION CHECK OVERLAY (Added for Sound/Fullscreen warning) -->
     <div id="immersion-modal" class="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300 hidden opacity-0 pointer-events-none">
-        <div class="glass-panel p-8 rounded-2xl max-w-md w-full border-yellow-500/30 shadow-2xl text-center transform scale-100">
-            <i data-lucide="sparkles" class="w-12 h-12 text-yellow-500 mx-auto mb-4 animate-pulse"></i>
-            <h2 class="text-3xl text-yellow-100 font-bold font-old mb-4">Enhance Your Journey</h2>
-            <p class="text-slate-300 font-old text-lg mb-8 leading-relaxed">
-                "Traveler, the bard's tale is best heard, not just read. The dragons are best seen in their full glory. Activate your senses."
-            </p>
-            <div class="flex flex-col gap-3">
-                <button onclick="game.confirmImmersion()" class="w-full px-6 py-4 bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-600 hover:to-yellow-500 text-black font-bold rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] hover:shadow-[0_0_30px_rgba(234,179,8,0.5)] transition-all font-old text-xl flex items-center justify-center gap-2 group">
-                    <i data-lucide="maximize" class="w-5 h-5 group-hover:scale-110 transition-transform"></i> Enable Sound & Full Screen
-                </button>
-                <button onclick="game.skipImmersion()" class="text-slate-500 hover:text-slate-300 font-sans text-xs uppercase tracking-widest font-bold py-2 hover:underline underline-offset-4">
-                    I travel light (Skip)
-                </button>
+        <!-- Added Image to Modal -->
+        <div class="glass-panel p-0 rounded-2xl max-w-md w-full border-yellow-500/30 shadow-2xl text-center transform scale-100 overflow-hidden bg-slate-900">
+            <div class="relative h-32 w-full">
+                <img id="immersion-img" src="" class="absolute inset-0 w-full h-full object-cover opacity-60">
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900"></div>
+            </div>
+            
+            <div class="p-8 pt-2 relative z-10">
+                <i data-lucide="sparkles" class="w-12 h-12 text-yellow-500 mx-auto mb-4 animate-pulse"></i>
+                <h2 class="text-3xl text-yellow-100 font-bold font-old mb-4">Enhance Your Journey</h2>
+                <p class="text-slate-300 font-old text-lg mb-8 leading-relaxed">
+                    "Traveler, the bard's tale is best heard, not just read. The dragons are best seen in their full glory. Activate your senses."
+                </p>
+                <div class="flex flex-col gap-3">
+                    <button onclick="game.confirmImmersion()" class="w-full px-6 py-4 bg-gradient-to-r from-yellow-700 to-yellow-600 hover:from-yellow-600 hover:to-yellow-500 text-black font-bold rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] hover:shadow-[0_0_30px_rgba(234,179,8,0.5)] transition-all font-old text-xl flex items-center justify-center gap-2 group">
+                        <i data-lucide="maximize" class="w-5 h-5 group-hover:scale-110 transition-transform"></i> Enable Sound & Full Screen
+                    </button>
+                    <button onclick="game.skipImmersion()" class="text-slate-500 hover:text-slate-300 font-sans text-xs uppercase tracking-widest font-bold py-2 hover:underline underline-offset-4">
+                        I travel light (Skip)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -232,11 +240,9 @@
 
     <!-- QR Code Overlay -->
     <div id="share-overlay" class="absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 transition-opacity duration-300 opacity-0 pointer-events-none">
-        <!-- Added max-h-screen and overflow-y-auto to prevent clipping -->
         <div class="glass-panel p-6 md:p-8 rounded-2xl flex flex-col items-center gap-4 md:gap-6 max-w-md w-full border-yellow-500/30 shadow-2xl transform transition-all scale-95 max-h-[90vh] overflow-y-auto no-scrollbar" id="share-content">
             <h2 class="text-2xl md:text-3xl text-yellow-500 font-bold font-old text-center shrink-0">Join the Adventure</h2>
             <div class="bg-white p-2 md:p-4 rounded-xl shadow-inner shrink-0">
-                <!-- Made QR code responsive -->
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https://augmentedthinker.github.io/fight/" alt="QR Code" class="w-48 h-48 md:w-80 md:h-80 object-contain">
             </div>
             <p class="text-slate-400 text-xs md:text-sm text-center font-sans shrink-0">Scan to play on Mobile<br><span class="text-yellow-600 font-bold">augmentedthinker.github.io/fight</span></p>
@@ -248,27 +254,43 @@
         // --- ASSETS & DATA ---
         const IMAGES = {
             intro: ["https://image.pollinations.ai/prompt/epic%20fantasy%20book%20cover%20art%201970s%20style%2C%20warrior%20and%20wizard%20looking%20at%20a%20glowing%20tavern%20in%20distance%2C%20frank%20frazetta%20style%2C%20oil%20painting%2C%20dramatic%20lighting%2C%20vibrant%20orange%20and%20purple%20sky?width=1024&height=1024&nologin=true&seed=101"],
-            difficulty: ["https://image.pollinations.ai/prompt/fantasy%20armory%20with%20rusty%20and%20golden%20weapons%20on%20wall%201970s%20dnd%20art%20oil%20painting?width=1024&height=1024&nologin=true&seed=150"],
+            dm_intro: ["https://image.pollinations.ai/prompt/mysterious%20hooded%20dungeon%20master%20holding%20a%20glowing%20book%20looking%20at%20viewer%2C%20fantasy%20tavern%20background%2C%20candlelight%2C%201970s%20dnd%20art%20style%20oil%20painting%20detailed?width=1024&height=1024&nologin=true&seed=999"],
+            immersion: ["https://image.pollinations.ai/prompt/fantasy%20bard%20telling%20stories%20by%20campfire%20detailed%20cinematic%20lighting%20oil%20painting?width=1024&height=600&nologin=true&seed=888"],
+            difficulty: ["https://image.pollinations.ai/prompt/contrast%20between%20novice%20rusty%20sword%20and%20master%20glowing%20legendary%20sword%20fantasy%20art%20armory%20background?width=1024&height=1024&nologin=true&seed=150"],
+            
+            // Character Selection (Portraits)
             char_select: ["https://image.pollinations.ai/prompt/fantasy%20rpg%20character%20selection%20warrior%20and%20wizard%20standing%20in%20a%20stone%20hall%20armory%2C%201970s%20d%26d%20art%20style%20oil%20painting%20dramatic%20lighting?width=1024&height=1024&nologin=true&seed=202"],
             
+            // Full Body for Confirmation Screen
+            warrior_full: ["https://image.pollinations.ai/prompt/full%20body%20shot%20fantasy%20warrior%20heroic%20pose%20detailed%20armor%20cinematic%208k%201970s%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=99"],
+            wizard_full: ["https://image.pollinations.ai/prompt/full%20body%20shot%20fantasy%20wizard%20casting%20spell%20glowing%20runes%20robes%20cinematic%208k%201970s%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=404"],
+
+            // Combat Portraits (Close up)
             warrior_bg: ["https://image.pollinations.ai/prompt/fantasy%20warrior%20portrait%20rugged%20face%20scarred%20armor%20heroic%20lighting%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=99"],
             warrior_wounded: ["https://image.pollinations.ai/prompt/fantasy%20warrior%20portrait%20injured%20bleeding%20broken%20armor%20exhausted%20battle%20damage%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=99"],
-            
             wizard_bg: ["https://image.pollinations.ai/prompt/fantasy%20wizard%20portrait%20mystical%20glowing%20eyes%20runes%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=404"],
             wizard_wounded: ["https://image.pollinations.ai/prompt/fantasy%20wizard%20portrait%20injured%20bleeding%20torn%20robes%20exhausted%20magical%20burns%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=404"],
             
+            // Locations
             forest: ["https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=1024&auto=format&fit=crop"],
             mountain: ["https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1024&auto=format&fit=crop"],
             
+            // Ambush Scenes (Environment focused, not monster face)
+            ambush_forest: ["https://image.pollinations.ai/prompt/fantasy%20trap%20in%20dark%20forest%20net%20falling%20leaves%20danger%20dynamic%20action%20shot%201970s%20art%20style?width=1024&height=1024&nologin=true&seed=505"],
+            ambush_cave: ["https://image.pollinations.ai/prompt/fantasy%20cave%20ambush%20rockslide%20trap%20glowing%20eyes%20in%20dark%20rocks%20danger%20dynamic%201970s%20art%20style?width=1024&height=1024&nologin=true&seed=606"],
+
+            // Enemy Portraits (For Combat)
             ogre_intro: ["https://image.pollinations.ai/prompt/fearsome%20ogre%20portrait%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true&seed=505"],
             ogre_wounded: ["https://image.pollinations.ai/prompt/fearsome%20ogre%20portrait%20injured%20bleeding%20open%20wounds%20angry%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true&seed=505"],
-            
             troll_intro: ["https://image.pollinations.ai/prompt/menacing%20troll%20portrait%20blue%20skin%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true&seed=606"],
             troll_wounded: ["https://image.pollinations.ai/prompt/menacing%20troll%20portrait%20injured%20bleeding%20green%20blood%20cuts%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true&seed=606"],
             
+            // Overlays
+            vs_bg: ["https://image.pollinations.ai/prompt/epic%20fantasy%20battle%20background%20fire%20and%20sparks%20clash%20abstract%20painting?width=1024&height=1024&nologin=true&seed=333"],
+
+            // Endings
             traveler: ["https://image.pollinations.ai/prompt/fantasy%20victory%20scene%20treasure%20chest%20overflowing%20gold%20coins%20magic%20items%20sunrise%20background%201970s%20oil%20painting%20style?width=1024&height=1024&nologin=true&seed=777"], 
-            town: ["https://image.pollinations.ai/prompt/fantasy%20tavern%20party%20scene%2C%20warrior%20and%20wizard%20surrounded%20by%20beautiful%20barmaids%20and%20cheering%20crowd%2C%20magical%20lights%20and%20ale%20flowing%2C%20fantasy%20celebration%20art%20oil%20painting%2C%20vibrant%20and%20cheerful?width=1024&height=1024&nologin=true&seed=45"],
-            
+            town: ["https://image.pollinations.ai/prompt/glowing%20golden%20pint%20of%20ale%20on%20wooden%20tavern%20table%20fantasy%20art%20warm%20lighting%20detailed%20oil%20painting?width=1024&height=1024&nologin=true&seed=45"],
             game_over: ["https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=1024&auto=format&fit=crop"]
         };
         
@@ -320,26 +342,23 @@
             renderBattleInterface() {
                 const container = document.getElementById('scene-container');
                 
-                // FIXED: Layout uses flex-col. 
-                // 1. Top panel uses 'flex-1' (takes all remaining space).
-                // 2. Bottom panel uses 'shrink-0' (stays fixed size).
                 container.innerHTML = `
                 <div id="battle-frame" class="fixed inset-0 w-full h-full bg-slate-950 flex flex-col overflow-hidden">
                     
                     <div id="vs-overlay" onclick="battle.startFight()" class="absolute inset-0 z-50 bg-gradient-to-br from-red-950 via-slate-950 to-black flex flex-col items-center justify-center cursor-pointer animate-bg-pan">
+                        <!-- ADDED: Dynamic background for VS screen -->
+                        <img src="${IMAGES.vs_bg[0]}" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay">
                         <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-600/20 via-transparent to-transparent animate-pulse"></div>
-                        <h1 class="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900 font-old drop-shadow-[0_0_35px_rgba(220,38,38,0.8)] animate-clash mb-6">VS</h1>
-                        <div class="glass-panel px-8 py-3 rounded-full border border-red-500/30 shadow-[0_0_20px_rgba(234,179,8,0.2)] hover:scale-105 transition-transform group">
+                        <h1 class="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900 font-old drop-shadow-[0_0_35px_rgba(220,38,38,0.8)] animate-clash mb-6 relative z-10">VS</h1>
+                        <div class="glass-panel px-8 py-3 rounded-full border border-red-500/30 shadow-[0_0_20px_rgba(234,179,8,0.2)] hover:scale-105 transition-transform group relative z-10">
                             <p class="text-yellow-500 font-sans text-xl tracking-[0.3em] font-bold group-hover:text-yellow-300">TAP TO FIGHT</p>
                         </div>
                     </div>
 
                     <!-- Top Split Panel (Images) -->
-                    <!-- FIXED: Changed h-[65%] to flex-1 min-h-0 to fill available space dynamically -->
                     <div class="flex-1 w-full flex md:flex-row flex-col relative bg-slate-900 min-h-0">
                         
                         <!-- HERO PANEL -->
-                        <!-- FIXED: Added border-b for mobile separation -->
                         <div id="hero-panel" class="split-panel active-turn relative w-full md:w-1/2 h-1/2 md:h-full border-b-2 md:border-b-0 md:border-r-2 border-black">
                             <div class="absolute inset-0 flex items-center justify-center bg-slate-900 z-20 transition-opacity duration-300" id="hero-loader">
                                 <div class="flex flex-col items-center gap-2"><i data-lucide="loader-2" class="w-8 h-8 text-blue-500 animate-spin"></i><span class="text-xs text-blue-500 font-bold uppercase tracking-widest">Summoning Hero</span></div>
@@ -408,7 +427,6 @@
                     </div>
 
                     <!-- Bottom Controls: Lifted -->
-                    <!-- FIXED: Reduced padding to give more vertical space to images -->
                     <div class="shrink-0 w-full bg-slate-900 border-t-4 md:border-t-8 border-slate-800 flex flex-col items-center px-2 md:px-4 pt-2 pb-2 md:pb-8 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-40 relative">
                         
                         <div class="w-full text-center mb-1 shrink-0">
@@ -472,7 +490,6 @@
                 if (this.state.auto) {
                     btn.classList.add('auto-active', 'bg-yellow-900/20');
                     if (this.state.turn === 'player') {
-                        // Trigger immediate roll if it's currently our turn
                         if (this.state.phase === 'attack') this.rollUserDie(20);
                         else if (this.state.phase === 'damage') this.rollUserDie(this.state.hero.dmgDie);
                     }
@@ -484,11 +501,9 @@
             skipFight() {
                 if (this.state.isOver) return;
                 this.state.skipped = true;
-                this.state.auto = false; // Stop auto logic from interfering
+                this.state.auto = false;
                 
-                // Simulate combat loop until someone dies
                 while (this.state.hero.currentHp > 0 && this.state.enemy.currentHp > 0) {
-                    // Hero Turn
                     let roll = Math.floor(Math.random() * 20) + 1;
                     if (roll === 20 || (roll !== 1 && (roll + this.state.hero.ab >= this.state.enemy.ac))) {
                         let dmg = Math.floor(Math.random() * this.state.hero.dmgDie) + 1 + this.state.hero.dmgMod;
@@ -497,7 +512,6 @@
                     }
                     if (this.state.enemy.currentHp <= 0) break;
 
-                    // Enemy Turn
                     roll = Math.floor(Math.random() * 20) + 1;
                     if (roll !== 1 && (roll + this.state.enemy.ab >= this.state.enemy.ac)) {
                         let dmg = Math.floor(Math.random() * this.state.enemy.dmgDie) + 1 + this.state.enemy.dmgMod;
@@ -505,7 +519,6 @@
                     }
                 }
 
-                // Finalize State
                 this.state.hero.currentHp = Math.max(0, this.state.hero.currentHp);
                 this.state.enemy.currentHp = Math.max(0, this.state.enemy.currentHp);
                 this.updateUI();
@@ -526,7 +539,6 @@
                 if (this.state.phase === 'damage' && sides !== this.state.hero.dmgDie) return;
 
                 this.animateDie(sides);
-                
                 const delay = this.state.auto ? 800 : 2000;
                 
                 setTimeout(() => {
@@ -573,7 +585,6 @@
                 this.triggerDamage('enemy', dmg); 
                 this.updateUI();
                 
-                // FIXED: Clearer math explanation
                 let mathMsg = `Rolled ${rawRoll} + ${this.state.hero.dmgMod}`;
                 if (this.state.lastCrit) mathMsg += ` (Crit Bonus)`;
                 this.log(`HIT for ${dmg} DMG! (${this.state.hero.weapon}: ${mathMsg})`, 'text-white');
@@ -588,7 +599,6 @@
                 this.setTurnUI('enemy', 'wait');
                 this.log(`${this.state.enemy.name} prepares to attack with ${this.state.enemy.weapon}...`, "text-red-500");
                 
-                // Faster enemy turns if auto is on
                 const stepDelay = this.state.auto ? 800 : 2000;
                 const animDelay = this.state.auto ? 500 : 1000;
 
@@ -613,7 +623,6 @@
                                     this.triggerDamage('hero', dmg); 
                                     this.updateUI();
                                     
-                                    // FIXED: Clearer math for enemy too
                                     this.log(`OUCH! Took ${dmg} DMG (Rolled ${rawRoll} + ${this.state.enemy.dmgMod})`, 'text-red-500');
                                     
                                     if (this.state.hero.currentHp <= 0) setTimeout(() => { if(!this.state.skipped) this.endGame(false); }, 3500);
@@ -683,7 +692,6 @@
                 document.getElementById('hero-bar').style.width = (heroPct * 100) + '%';
                 document.getElementById('enemy-bar').style.width = (enemyPct * 100) + '%';
                 
-                // FIXED: Changed threshold from 0.5 (50%) to 0.2 (20%)
                 if (heroPct <= 0.2 && !this.state.heroWounded) { this.state.heroWounded = true; document.getElementById('hero-img').src = IMAGES[this.state.hero.wounded_bg][0]; }
                 if (enemyPct <= 0.2 && !this.state.enemyWounded) { this.state.enemyWounded = true; document.getElementById('enemy-img').src = IMAGES[this.state.enemy.wounded_bg][0]; }
             },
@@ -730,7 +738,7 @@
         // --- STORY ENGINE ---
         const game = {
             state: { scene: 'intro', hero: null, enemy: null, difficulty: 'apprentice', soundEnabled: false },
-            onVideoEnd: null, // Callback storage
+            onVideoEnd: null,
 
             refreshArt() {
                 Object.keys(IMAGES).forEach(key => {
@@ -768,22 +776,17 @@
                 const vid = document.getElementById('game-video');
                 const bgAudio = document.getElementById('bg-player');
                 
-                // 1. Handle Video
-                if(vid) {
-                    vid.muted = !this.state.soundEnabled;
-                }
+                if(vid) vid.muted = !this.state.soundEnabled;
                 
-                // 2. Handle Background Music
                 if (bgAudio) {
                     if (this.state.soundEnabled) {
-                        bgAudio.volume = 0.15; // Play lightly in background
+                        bgAudio.volume = 0.15;
                         bgAudio.play().catch(e => console.log("BG Audio play failed (interaction needed):", e));
                     } else {
                         bgAudio.pause();
                     }
                 }
 
-                // 3. Handle Narration
                 if (this.state.soundEnabled) {
                     this.playNarrative(this.state.scene);
                 } else {
@@ -791,9 +794,8 @@
                     if(narrativeAudio) narrativeAudio.pause();
                 }
 
-                // 4. Update UI
                 this.updateGlobalMuteIcon();
-                if (this.state.scene === 'intro') this.renderNarrative(); // Update intro button
+                if (this.state.scene === 'intro') this.renderNarrative();
             },
 
             updateGlobalMuteIcon() {
@@ -808,25 +810,20 @@
                 const audio = document.getElementById('narrative-player');
                 if (!audio) return;
                 
-                // Stop any current audio
                 audio.pause();
                 
-                // Check if we have a track for this scene
                 const track = NARRATION[scene];
                 if (track && this.state.soundEnabled) {
                     audio.src = track;
-                    // Play returns a promise which might fail if user hasn't interacted yet
                     audio.play().catch(e => console.log("Audio play failed (interaction needed):", e));
                 }
             },
             
-            // --- CINEMATIC SYSTEM ---
             playCinematic(videoSrc, callback) {
                 const overlay = document.getElementById('video-overlay');
                 const video = document.getElementById('game-video');
                 const btn = document.getElementById('video-play-btn');
                 
-                // Stop narration when video starts
                 const audio = document.getElementById('narrative-player');
                 if(audio) audio.pause();
                 
@@ -834,30 +831,25 @@
 
                 this.onVideoEnd = callback;
                 
-                // FORCE RELOAD STRATEGY
                 video.innerHTML = `<source src="${videoSrc}" type="video/mp4">`;
-                video.load(); // Required when changing sources dynamically via innerHTML/source tags
+                video.load();
                 
-                // Ensure audio setting is respected
                 video.muted = !this.state.soundEnabled;
 
                 overlay.classList.remove('hidden');
-                setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
 
-                video.onended = () => this.skipVideo(); // Auto close on end
+                video.onended = () => this.skipVideo();
 
-                // Handle Errors (e.g. 404 or bad format)
                 video.onerror = () => {
                     console.log("Video failed to load: " + videoSrc);
                     this.skipVideo();
                 }
 
-                // Try to play
                 const playPromise = video.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(err => {
                         console.log("Autoplay prevented or error:", err);
-                        // If it fails (often due to unmuted autoplay policies if soundEnabled is true but no interaction registered yet), show button
                         btn.classList.remove('hidden');
                     });
                 }
@@ -867,7 +859,7 @@
                 const video = document.getElementById('game-video');
                 const btn = document.getElementById('video-play-btn');
                 if (video) {
-                    video.muted = !this.state.soundEnabled; // Ensure sound state is correct
+                    video.muted = !this.state.soundEnabled;
                     video.play();
                 }
                 if (btn) btn.classList.add('hidden');
@@ -884,38 +876,33 @@
                         overlay.classList.add('hidden');
                         if (this.onVideoEnd) {
                             const cb = this.onVideoEnd;
-                            this.onVideoEnd = null; // Clear callback
+                            this.onVideoEnd = null;
                             cb();
                         }
-                    }, 500); // Wait for fade out
+                    }, 500);
                 }
             },
 
             init() { 
                 lucide.createIcons(); 
-                // Show Intro Scene immediately (user clicks start to play video)
                 this.updateScene('intro');
             },
 
             updateScene(scene) {
-                // --- CINEMATIC INTERCEPTIONS ---
-                // Before Combat -> Play Middle Video
                 if (scene === 'combat' && this.state.scene === 'monster_intro') {
                     this.playCinematic('middle-vid.mp4', () => {
                         this._performSceneUpdate(scene);
                     });
-                    return; // Stop here, wait for video
+                    return;
                 }
                 
-                // Before Victory Town -> Play Final Video
                 if (scene === 'town' && this.state.scene === 'traveler') {
                     this.playCinematic('final-vid.mp4', () => {
                         this._performSceneUpdate(scene);
                     });
-                    return; // Stop here, wait for video
+                    return;
                 }
 
-                // Normal update
                 this._performSceneUpdate(scene);
             },
 
@@ -933,22 +920,20 @@
                         battle.init(this.state.hero, this.state.enemy);
                     } else {
                         bg.classList.remove('opacity-0');
-                        // FIXED: Show top-ui on 'difficulty' screen so users can go back
                         ui.classList.toggle('hidden', scene === 'intro');
                         this.renderNarrative();
                         this.updateBg();
                     }
                     el.style.opacity = '1';
                     
-                    // TRIGGER NARRATION
                     this.playNarrative(scene);
                 }, 300);
             },
 
             updateBg() {
                 let key = this.state.scene;
-                if (key === 'hero_confirm') key = this.state.hero.name === 'Warrior' ? 'warrior_bg' : 'wizard_bg';
-                else if (key === 'monster_intro') key = this.state.enemy.bg; 
+                if (key === 'hero_confirm') key = this.state.hero.name === 'Warrior' ? 'warrior_full' : 'wizard_full';
+                else if (key === 'monster_intro') key = this.state.enemy.name.includes('Ogre') ? 'ambush_forest' : 'ambush_cave'; 
                 
                 const list = IMAGES[key] || IMAGES.intro;
                 const url = list[0];
@@ -966,9 +951,11 @@
 
             home() { this.state.hero = null; this.updateScene('intro'); },
             
-            // --- NEW START & IMMERSION CHECK LOGIC ---
             start() {
-                // Check conditions: Sound OR Fullscreen missing triggers check
+                // Preload Immersion Image for better UX
+                const img = document.getElementById('immersion-img');
+                if(img) img.src = IMAGES.immersion[0];
+
                 const isFullscreen = !!document.fullscreenElement;
                 const isSound = this.state.soundEnabled;
 
@@ -981,7 +968,7 @@
             
             proceedToGame() {
                  this.playCinematic('start-vid.mp4', () => {
-                    this.updateScene('difficulty');
+                    this.updateScene('dm_intro');
                 });
             },
 
@@ -991,10 +978,8 @@
             },
 
             confirmImmersion() {
-                // Enable what we can. Toggle checks internal state/DOM, so safe to call.
                 if (!this.state.soundEnabled) this.toggleSound();
                 if (!document.fullscreenElement) this.toggleFullscreen();
-                
                 this.closeImmersionModal();
             },
             
@@ -1015,7 +1000,8 @@
             
             back() {
                 const s = this.state.scene;
-                if(s === 'difficulty') this.home();
+                if(s === 'difficulty') this.updateScene('dm_intro');
+                else if(s === 'dm_intro') this.home();
                 else if(s === 'char_select') this.updateScene('difficulty');
                 else if(s === 'hero_confirm') this.updateScene('char_select');
                 else if(s === 'path_select') this.updateScene('hero_confirm');
@@ -1034,21 +1020,19 @@
             confirmHero() { this.updateScene('path_select'); },
             
             selectPath(p) { 
-                // Clone base enemy data
                 let enemy = {...DATA[p === 'forest' ? 'ogre' : 'troll']};
                 
-                // Apply Difficulty Modifiers
                 const diff = this.state.difficulty;
                 if(diff === 'novice') {
                     enemy.max = Math.floor(enemy.max * 0.8);
                     enemy.dmgMod = Math.max(0, enemy.dmgMod - 1);
-                    enemy.level = enemy.level - 1; // Lower level
+                    enemy.level = enemy.level - 1; 
                 } else if (diff === 'master') {
                     enemy.max = Math.floor(enemy.max * 1.5);
                     enemy.ac = enemy.ac + 1;
                     enemy.dmgMod = enemy.dmgMod + 2;
-                    enemy.name = "Elder " + enemy.name; // Visual indicator of difficulty
-                    enemy.level = enemy.level + 2; // Increase level
+                    enemy.name = "Elder " + enemy.name;
+                    enemy.level = enemy.level + 2; 
                 }
 
                 this.state.enemy = enemy;
@@ -1064,12 +1048,24 @@
                     h = `<div class="text-center space-y-6 max-w-md px-4 relative z-10 flex flex-col items-center">
                             <div class="flex justify-center"><i data-lucide="shield" class="w-24 h-24 text-yellow-600 fill-yellow-950/50 animate-pulse"></i></div>
                             <h1 class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-700 filter drop-shadow-xl font-old leading-tight">Quest for the<br/>Golden Pint</h1>
-                            
                             ${btn('start()', 'Begin Adventure', 'sword')}
                             <div class="flex gap-4 mt-6">
                                 <button onclick="game.refreshArt()" class="px-4 py-2 glass-panel rounded-full text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-2 group border-white/5 hover:border-white/20"><i data-lucide="refresh-cw" class="w-3 h-3 group-hover:animate-spin"></i> Reroll Art</button>
                                 <button onclick="game.toggleShare(true)" class="px-4 py-2 glass-panel rounded-full text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-2 group border-white/5 hover:border-white/20"><i data-lucide="qr-code" class="w-3 h-3"></i> Share</button>
                             </div>
+                        </div>`;
+                } else if (s.scene === 'dm_intro') {
+                    h = `<div class="text-center px-4 max-w-md flex flex-col items-center gap-6">
+                            <div class="w-24 h-24 rounded-full bg-black/50 border-2 border-yellow-600/50 flex items-center justify-center mb-2 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+                                <i data-lucide="book-open" class="w-12 h-12 text-yellow-500"></i>
+                            </div>
+                            <div class="glass-panel p-8 rounded-xl border-yellow-500/30 bg-black/60 relative">
+                                <i data-lucide="quote" class="w-8 h-8 text-yellow-700 absolute -top-4 -left-4 fill-black"></i>
+                                <p class="text-yellow-100 font-old text-xl leading-relaxed italic">
+                                    "Greetings, traveler. I am the Keeper of the Tales. The path you are about to walk is treacherous, and the dice... they can be cruel masters. Are you prepared to test your luck?"
+                                </p>
+                            </div>
+                            ${btn("updateScene('difficulty')", "I am Ready", "scroll")}
                         </div>`;
                 } else if (s.scene === 'difficulty') {
                     h = `<div class="flex flex-col gap-4 w-full max-w-md px-4">
@@ -1124,8 +1120,27 @@
                     const hero = s.hero;
                     h = `<div class="flex flex-col items-center justify-center gap-6 max-w-md px-4 text-center w-full"><h2 class="text-4xl text-yellow-500 font-bold drop-shadow-xl font-old">You have chosen</h2><h1 class="text-6xl font-extrabold text-white font-old mb-2 tracking-wide drop-shadow-lg">${hero.name}</h1><p class="text-slate-200 text-lg italic glass-panel px-6 py-4 rounded-xl border border-white/10 font-old">"${hero.desc}"</p>${btn('confirmHero()', 'Continue Journey', 'arrow-right')}</div>`;
                 } else if (s.scene === 'path_select') {
-                    // FIXED: Removed Danger Text
-                    h = `<div class="flex flex-col gap-6 w-full max-w-md px-4"><h2 class="text-4xl text-yellow-500 font-bold text-center drop-shadow-xl font-old">Choose Path</h2><p class="glass-panel p-4 rounded-xl text-slate-200 text-center text-sm leading-relaxed border border-white/10 font-old">The road ahead forks. To the left, ancient woods whisper warnings. To the right, mountains loom cold and silent.</p><div class="grid gap-4"><button onclick="game.selectPath('forest')" class="glass-panel p-6 rounded-xl hover:border-green-500 transition-all text-left group"><h3 class="text-2xl font-bold text-green-100 mb-1 group-hover:text-green-400 font-old tracking-wide">Dark Forest</h3></button><button onclick="game.selectPath('mountain')" class="glass-panel p-6 rounded-xl hover:border-indigo-500 transition-all text-left group"><h3 class="text-2xl font-bold text-indigo-100 mb-1 group-hover:text-indigo-400 font-old tracking-wide">Rocky Pass</h3></button></div></div>`;
+                    // ADDED: Images to Path Buttons
+                    h = `<div class="flex flex-col gap-6 w-full max-w-md px-4">
+                            <h2 class="text-4xl text-yellow-500 font-bold text-center drop-shadow-xl font-old">Choose Path</h2>
+                            <p class="glass-panel p-4 rounded-xl text-slate-200 text-center text-sm leading-relaxed border border-white/10 font-old">The road ahead forks. To the left, ancient woods whisper warnings. To the right, mountains loom cold and silent.</p>
+                            <div class="grid gap-4">
+                                <button onclick="game.selectPath('forest')" class="relative overflow-hidden h-32 rounded-xl border border-white/10 hover:border-green-500 transition-all group text-left">
+                                    <img src="${IMAGES.forest[0]}" class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-700">
+                                    <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
+                                    <div class="relative z-10 p-6 h-full flex flex-col justify-center">
+                                        <h3 class="text-2xl font-bold text-green-100 group-hover:text-green-400 font-old tracking-wide drop-shadow-lg">Dark Forest</h3>
+                                    </div>
+                                </button>
+                                <button onclick="game.selectPath('mountain')" class="relative overflow-hidden h-32 rounded-xl border border-white/10 hover:border-indigo-500 transition-all group text-left">
+                                    <img src="${IMAGES.mountain[0]}" class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-700">
+                                    <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
+                                    <div class="relative z-10 p-6 h-full flex flex-col justify-center">
+                                        <h3 class="text-2xl font-bold text-indigo-100 group-hover:text-indigo-400 font-old tracking-wide drop-shadow-lg">Rocky Pass</h3>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>`;
                 } else if (s.scene === 'monster_intro') {
                     h = `<div class="flex flex-col items-center justify-center gap-8 max-w-md px-4 text-center w-full"><h2 class="text-6xl text-red-600 font-black drop-shadow-2xl font-old tracking-wider animate-pulse">AMBUSH</h2><div class="glass-panel p-6 rounded-xl border-red-500/30 bg-black/40"><p class="text-slate-200 text-xl leading-relaxed font-old">A <span class="text-red-400 font-bold">Lvl ${s.enemy.level} ${s.enemy.name}</span> emerges from the shadows!</p></div>${btn("updateScene('combat')", 'Roll for Initiative', 'swords')}</div>`;
                 } else if (s.scene === 'traveler') {
@@ -1143,4 +1158,4 @@
         window.onload = () => game.init();
     </script>
 </body>
-            </html>
+    </html>
