@@ -107,6 +107,21 @@
 </head>
 <body class="bg-slate-950 text-slate-200 font-sans h-screen w-screen overflow-hidden selection:bg-yellow-500/30">
 
+    <!-- CINEMATIC VIDEO OVERLAY (Generic) -->
+    <div id="video-overlay" class="fixed inset-0 z-[60] bg-black flex items-center justify-center transition-opacity duration-1000 hidden opacity-0">
+        <video id="game-video" class="w-full h-full object-cover" playsinline muted>
+            <!-- Source set dynamically by JS -->
+        </video>
+        
+        <button id="video-play-btn" onclick="game.forcePlayVideo()" class="hidden absolute z-20 px-8 py-4 bg-yellow-600 text-black font-bold font-old text-2xl rounded-xl border-2 border-yellow-400 hover:bg-yellow-500 hover:scale-105 transition-all shadow-[0_0_30px_rgba(234,179,8,0.5)] animate-pulse">
+            CONTINUE
+        </button>
+
+        <button onclick="game.skipVideo()" class="absolute bottom-8 right-8 z-20 text-white/50 hover:text-white font-sans text-xs uppercase tracking-widest border border-white/20 px-4 py-2 rounded-full hover:bg-white/10 transition-all backdrop-blur-sm">
+            Skip
+        </button>
+    </div>
+
     <!-- Background Layer -->
     <div id="background-layer" class="absolute inset-0 z-0 bg-slate-950 transition-opacity duration-500">
         <div id="bg-loader" class="absolute inset-0 z-20 flex items-center justify-center bg-slate-950 transition-opacity duration-500 opacity-0 pointer-events-none">
@@ -152,11 +167,10 @@
 
     <script>
         // --- ASSETS & DATA ---
-        // Added 'wounded' variations to images
         const IMAGES = {
             intro: ["https://image.pollinations.ai/prompt/epic%20fantasy%20book%20cover%20art%201970s%20style%2C%20warrior%20and%20wizard%20looking%20at%20a%20glowing%20tavern%20in%20distance%2C%20frank%20frazetta%20style%2C%20oil%20painting%2C%20dramatic%20lighting%2C%20vibrant%20orange%20and%20purple%20sky?width=1024&height=1024&nologin=true&seed=101"],
             difficulty: ["https://image.pollinations.ai/prompt/fantasy%20armory%20with%20rusty%20and%20golden%20weapons%20on%20wall%201970s%20dnd%20art%20oil%20painting?width=1024&height=1024&nologin=true&seed=150"],
-            char_select: ["https://image.pollinations.ai/prompt/fantasy%20rpg%20character%20selection%20warrior%20and%20wizard%20standing%20in%20a%20stone%20hall%20armory%2C%201970s%20d%26d%20art%20style%2C%20oil%20painting%20dramatic%20lighting?width=1024&height=1024&nologin=true&seed=202"],
+            char_select: ["https://image.pollinations.ai/prompt/fantasy%20rpg%20character%20selection%20warrior%20and%20wizard%20standing%20in%20a%20stone%20hall%20armory%2C%201970s%20d%26d%20art%20style%20oil%20painting%20dramatic%20lighting?width=1024&height=1024&nologin=true&seed=202"],
             
             warrior_bg: ["https://image.pollinations.ai/prompt/fantasy%20warrior%20portrait%20rugged%20face%20scarred%20armor%20heroic%20lighting%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=99"],
             warrior_wounded: ["https://image.pollinations.ai/prompt/fantasy%20warrior%20portrait%20injured%20bleeding%20broken%20armor%20exhausted%20battle%20damage%201970s%20dnd%20art%20style%20oil%20painting?width=600&height=1024&nologin=true&seed=99"],
@@ -174,8 +188,6 @@
             troll_wounded: ["https://image.pollinations.ai/prompt/menacing%20troll%20portrait%20injured%20bleeding%20green%20blood%20cuts%20fantasy%20art%201970s%20style?width=600&height=1024&nologin=true&seed=606"],
             
             traveler: ["https://image.pollinations.ai/prompt/fantasy%20victory%20scene%20treasure%20chest%20overflowing%20gold%20coins%20magic%20items%20sunrise%20background%201970s%20oil%20painting%20style?width=1024&height=1024&nologin=true&seed=777"], 
-            
-            // UPDATED: Lively, celebratory pub scene
             town: ["https://image.pollinations.ai/prompt/fantasy%20tavern%20party%20scene%2C%20warrior%20and%20wizard%20surrounded%20by%20beautiful%20barmaids%20and%20cheering%20crowd%2C%20magical%20lights%20and%20ale%20flowing%2C%20fantasy%20celebration%20art%20oil%20painting%2C%20vibrant%20and%20cheerful?width=1024&height=1024&nologin=true&seed=45"],
             
             game_over: ["https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=1024&auto=format&fit=crop"]
@@ -211,7 +223,6 @@
                 lucide.createIcons();
             },
 
-            // Click Handler for VS Screen
             startFight() {
                 const el = document.getElementById('vs-overlay');
                 if(el) {
@@ -225,7 +236,6 @@
                 container.innerHTML = `
                 <div id="battle-frame" class="relative w-full max-w-[420px] h-[80vh] md:h-[90vh] bg-slate-950 shadow-2xl flex flex-col overflow-hidden rounded-[2rem] border-[4px] border-slate-800 ring-1 ring-white/10 lg:rounded-[3rem] lg:border-[8px] animate-in fade-in zoom-in duration-500">
                     
-                    <!-- START FIGHT OVERLAY -->
                     <div id="vs-overlay" onclick="battle.startFight()" class="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm transition-all duration-500 hover:bg-black/70">
                         <h1 class="text-9xl font-black text-red-600 font-old animate-pulse drop-shadow-[0_0_25px_rgba(220,38,38,0.8)] scale-150 transform mb-4">VS</h1>
                         <p class="text-white/90 font-sans text-lg tracking-[0.5em] font-bold animate-bounce border border-white/20 px-6 py-2 rounded-full bg-white/5">TAP TO FIGHT</p>
@@ -233,63 +243,30 @@
 
                     <div class="h-[55%] w-full flex relative bg-slate-900">
                         <div id="hero-panel" class="split-panel active-turn border-r-4 border-slate-900">
-                            <!-- Loader -->
                             <div class="absolute inset-0 flex items-center justify-center bg-slate-900 z-20 transition-opacity duration-300" id="hero-loader">
-                                <div class="flex flex-col items-center gap-2">
-                                    <i data-lucide="loader-2" class="w-8 h-8 text-blue-500 animate-spin"></i>
-                                    <span class="text-xs text-blue-500 font-bold uppercase tracking-widest">Summoning Hero</span>
-                                </div>
+                                <div class="flex flex-col items-center gap-2"><i data-lucide="loader-2" class="w-8 h-8 text-blue-500 animate-spin"></i><span class="text-xs text-blue-500 font-bold uppercase tracking-widest">Summoning Hero</span></div>
                             </div>
-                            <!-- Image with ID for Safe Loading -->
                             <img id="hero-img" src="${IMAGES[this.state.hero.bg][0]}" class="split-image opacity-0 transition-opacity duration-700" alt="Hero">
-                            
                             <div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
                                 <div class="flex justify-between items-end">
-                                    <div>
-                                        <div class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Lvl ${this.state.hero.level} Hero</div>
-                                        <span class="text-xl font-bold text-blue-100 text-glow tracking-wider">${this.state.hero.name.toUpperCase()}</span>
-                                    </div>
+                                    <div><div class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Lvl ${this.state.hero.level} Hero</div><span class="text-xl font-bold text-blue-100 text-glow tracking-wider">${this.state.hero.name.toUpperCase()}</span></div>
                                     <span id="hero-hp-text" class="text-xl font-bold text-white text-glow">${this.state.hero.currentHp}</span>
                                 </div>
                                 <div class="hp-track h-4 border-2"><div id="hero-bar" class="hp-fill bg-blue-600" style="width: 100%"></div></div>
-                                <div class="mt-2 flex gap-1">
-                                    <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AC ${this.state.hero.ac}</span>
-                                    <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AB +${this.state.hero.ab}</span>
-                                    <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">${this.state.hero.weapon} (1d${this.state.hero.dmgDie}+${this.state.hero.dmgMod})</span>
-                                </div>
                             </div>
                         </div>
-                        
-                        <!-- Small VS Badge (Behind Overlay) -->
-                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none opacity-50">
-                            <span class="text-4xl md:text-6xl font-black text-white italic text-glow drop-shadow-2xl" style="font-family: serif;">VS</span>
-                        </div>
-                        
+                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none opacity-50"><span class="text-4xl md:text-6xl font-black text-white italic text-glow drop-shadow-2xl" style="font-family: serif;">VS</span></div>
                         <div id="enemy-panel" class="split-panel inactive-turn border-l-4 border-slate-900">
-                            <!-- Loader -->
                             <div class="absolute inset-0 flex items-center justify-center bg-slate-900 z-20 transition-opacity duration-300" id="enemy-loader">
-                                <div class="flex flex-col items-center gap-2">
-                                    <i data-lucide="loader-2" class="w-8 h-8 text-red-500 animate-spin"></i>
-                                    <span class="text-xs text-red-500 font-bold uppercase tracking-widest">Summoning Enemy</span>
-                                </div>
+                                <div class="flex flex-col items-center gap-2"><i data-lucide="loader-2" class="w-8 h-8 text-red-500 animate-spin"></i><span class="text-xs text-red-500 font-bold uppercase tracking-widest">Summoning Enemy</span></div>
                             </div>
-                            <!-- Image with ID for Safe Loading -->
                             <img id="enemy-img" src="${IMAGES[this.state.enemy.bg][0]}" class="split-image opacity-0 transition-opacity duration-700" alt="Enemy">
-
                             <div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 flex flex-col z-10">
                                 <div class="flex justify-between items-end">
-                                    <div>
-                                        <div class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Lvl ${this.state.enemy.level} Enemy</div>
-                                        <span class="text-xl font-bold text-red-100 text-glow tracking-wider">${this.state.enemy.name.toUpperCase()}</span>
-                                    </div>
+                                    <div><div class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Lvl ${this.state.enemy.level} Enemy</div><span class="text-xl font-bold text-red-100 text-glow tracking-wider">${this.state.enemy.name.toUpperCase()}</span></div>
                                     <span id="enemy-hp-text" class="text-xl font-bold text-white text-glow">${this.state.enemy.currentHp}</span>
                                 </div>
                                 <div class="hp-track h-4 border-2"><div id="enemy-bar" class="hp-fill bg-red-600" style="width: 100%"></div></div>
-                                <div class="mt-2 flex gap-1 justify-end">
-                                    <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AB +${this.state.enemy.ab}</span>
-                                    <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">AC ${this.state.enemy.ac}</span>
-                                    <span class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-slate-300 font-bold">${this.state.enemy.weapon} (1d${this.state.enemy.dmgDie}+${this.state.enemy.dmgMod})</span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -317,52 +294,26 @@
                     const img = document.getElementById(imgId);
                     const loader = document.getElementById(loaderId);
                     if(!img || !loader) return;
-
-                    const onLoaded = () => {
-                        img.classList.remove('opacity-0');
-                        loader.classList.add('opacity-0', 'pointer-events-none');
-                    };
-
-                    const onError = () => {
-                        loader.innerHTML = `
-                            <div class="flex flex-col items-center text-red-500">
-                                <i data-lucide="alert-triangle" class="w-8 h-8 mb-2"></i>
-                                <span class="text-[10px] uppercase font-bold">Image Failed</span>
-                            </div>
-                        `;
-                        lucide.createIcons();
-                    };
-
-                    if (img.complete && img.naturalHeight !== 0) {
-                        onLoaded();
-                    } else {
-                        img.onload = onLoaded;
-                        img.onerror = onError;
-                    }
+                    const onLoaded = () => { img.classList.remove('opacity-0'); loader.classList.add('opacity-0', 'pointer-events-none'); };
+                    const onError = () => { loader.innerHTML = `<div class="flex flex-col items-center text-red-500"><i data-lucide="alert-triangle" class="w-8 h-8 mb-2"></i><span class="text-[10px] uppercase font-bold">Image Failed</span></div>`; lucide.createIcons(); };
+                    if (img.complete && img.naturalHeight !== 0) onLoaded();
+                    else { img.onload = onLoaded; img.onerror = onError; }
                 };
-
-                // Trigger handlers for both images immediately after insertion
                 handleImageLoad('hero-img', 'hero-loader');
                 handleImageLoad('enemy-img', 'enemy-loader');
             },
 
             rollUserDie(sides) {
-                // Prevent rolling if the VS screen is still up
                 if (document.getElementById('vs-overlay')) return;
-                
                 if (this.state.isOver || this.state.turn !== 'player') return;
-                
-                // --- STRICT VALIDATION ---
-                // If attacking, ONLY D20 works
                 if (this.state.phase === 'attack' && sides !== 20) return;
-                // If damaging, ONLY specific weapon die works
                 if (this.state.phase === 'damage' && sides !== this.state.hero.dmgDie) return;
 
                 this.animateDie(sides);
                 setTimeout(() => {
                     if (this.state.phase === 'attack') this.resolvePlayerAttack();
                     else if (this.state.phase === 'damage') this.resolvePlayerDamage();
-                }, 2000); // Wait 2s for dice roll
+                }, 2000); 
             },
 
             resolvePlayerAttack() {
@@ -378,8 +329,8 @@
                     this.setTurnUI('player', 'damage'); 
                 } else {
                     this.log(`MISSED! Rolled ${roll} + ${this.state.hero.ab} = ${total} (vs AC ${this.state.enemy.ac})`, 'text-red-400');
-                    this.triggerMiss('enemy'); // Show MISS on enemy
-                    setTimeout(() => this.startEnemyTurn(), 2000); // Delay before enemy acts
+                    this.triggerMiss('enemy'); 
+                    setTimeout(() => this.startEnemyTurn(), 2000); 
                 }
             },
 
@@ -387,17 +338,13 @@
                 let dmg = Math.floor(Math.random() * this.state.hero.dmgDie) + 1;
                 if (this.state.lastCrit) dmg += Math.floor(Math.random() * this.state.hero.dmgDie) + 1; 
                 dmg += this.state.hero.dmgMod;
-
                 this.state.enemy.currentHp = Math.max(0, this.state.enemy.currentHp - dmg);
-                this.triggerDamage('enemy', dmg); // PASS DMG AMOUNT
+                this.triggerDamage('enemy', dmg); 
                 this.updateUI();
-                
-                let msg = `DEALT ${dmg} DAMAGE! (Rolled ${dmg - this.state.hero.dmgMod}`; // Simplified math display
+                let msg = `DEALT ${dmg} DAMAGE! (Rolled ${dmg - this.state.hero.dmgMod}`; 
                 if(this.state.lastCrit) msg += ` (Crit)`;
                 msg += ` + ${this.state.hero.dmgMod})`;
-                
                 this.log(msg, 'text-white');
-
                 if (this.state.enemy.currentHp <= 0) setTimeout(() => this.endGame(true), 3500);
                 else this.startEnemyTurn();
             },
@@ -406,44 +353,33 @@
                 this.state.turn = 'enemy';
                 this.setTurnUI('enemy', 'wait');
                 this.log(`${this.state.enemy.name} prepares to attack...`, "text-red-500");
-                
                 setTimeout(() => { 
                     this.animateDie(20); 
                     setTimeout(() => {
                         const roll = Math.floor(Math.random() * 20) + 1;
                         const total = roll + this.state.enemy.ab;
-                        const isCrit = roll === 20;
                         const isHit = !((roll === 1) || (total < this.state.hero.ac));
-
                         if (isHit) {
                             this.log(`ENEMY HITS! Rolled ${roll} + ${this.state.enemy.ab} = ${total}`, 'text-red-400');
                             setTimeout(() => {
                                 this.animateDie(this.state.enemy.dmgDie);
                                 setTimeout(() => {
                                     let dmg = Math.floor(Math.random() * this.state.enemy.dmgDie) + 1;
-                                    if (isCrit) dmg += Math.floor(Math.random() * this.state.enemy.dmgDie) + 1;
                                     dmg += this.state.enemy.dmgMod;
-
                                     this.state.hero.currentHp = Math.max(0, this.state.hero.currentHp - dmg);
-                                    this.triggerDamage('hero', dmg); // PASS DMG AMOUNT
+                                    this.triggerDamage('hero', dmg); 
                                     this.updateUI();
-                                    
-                                    let msg = `TOOK ${dmg} DAMAGE! (Rolled ${dmg - this.state.enemy.dmgMod}`;
-                                    if(isCrit) msg += ` (Crit)`;
-                                    msg += ` + ${this.state.enemy.dmgMod})`;
-                                    
-                                    this.log(msg, 'text-red-500');
-
+                                    this.log(`TOOK ${dmg} DAMAGE!`, 'text-red-500');
                                     if (this.state.hero.currentHp <= 0) setTimeout(() => this.endGame(false), 3500);
                                     else setTimeout(() => this.startPlayerTurn(), 3500);
-                                }, 2000); // Damage roll wait
-                            }, 2000); // Wait for hit text
+                                }, 2000);
+                            }, 2000);
                         } else {
-                            this.log(`ENEMY MISSED! Rolled ${roll} + ${this.state.enemy.ab} = ${total} (vs AC ${this.state.hero.ac})`, 'text-slate-400');
-                            this.triggerMiss('hero'); // Show MISS on hero
-                            setTimeout(() => this.startPlayerTurn(), 3000); // Delay before player turn
+                            this.log(`ENEMY MISSED!`, 'text-slate-400');
+                            this.triggerMiss('hero'); 
+                            setTimeout(() => this.startPlayerTurn(), 3000); 
                         }
-                    }, 2000); // Attack roll wait
+                    }, 2000); 
                 }, 1000);
             },
 
@@ -457,7 +393,6 @@
             setTurnUI(who, phase) {
                 const banner = document.getElementById('turn-banner');
                 if(!banner) return;
-                
                 if (who === 'player') {
                     banner.innerText = phase === 'attack' ? "Your Turn: Roll to Hit" : "Hit! Roll Damage";
                     banner.className = "inline-block mb-1 bg-yellow-600 text-black px-6 py-1 rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg animate-pulse";
@@ -465,74 +400,35 @@
                     banner.innerText = "Enemy Turn";
                     banner.className = "inline-block mb-1 bg-red-900 text-white px-6 py-1 rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg";
                 }
-
                 document.getElementById('hero-panel').className = `split-panel border-r-4 border-slate-900 transition-all duration-500 ${who === 'player' ? 'active-turn' : 'inactive-turn'}`;
                 document.getElementById('enemy-panel').className = `split-panel border-l-4 border-slate-900 transition-all duration-500 ${who === 'enemy' ? 'active-turn' : 'inactive-turn'}`;
-
-                // --- HIGHLIGHT LOGIC ---
-                // First, remove active class from ALL dice
                 document.querySelectorAll('.die-btn').forEach(btn => btn.classList.remove('die-active'));
-                
-                // Then, only add it back if it is the Player's turn
                 if (who === 'player') {
-                    if (phase === 'attack') {
-                        document.getElementById('d20-btn').classList.add('die-active');
-                    } else if (phase === 'damage') {
-                        // Dynamically light up only the correct damage die
-                        document.getElementById(`d${this.state.hero.dmgDie}-btn`).classList.add('die-active');
-                    }
+                    if (phase === 'attack') document.getElementById('d20-btn').classList.add('die-active');
+                    else if (phase === 'damage') document.getElementById(`d${this.state.hero.dmgDie}-btn`).classList.add('die-active');
                 }
             },
 
             updateUI() {
-                // Update HP numbers
                 document.getElementById('hero-hp-text').innerText = this.state.hero.currentHp;
                 document.getElementById('enemy-hp-text').innerText = this.state.enemy.currentHp;
-                
-                // Update HP Bars
                 const heroPct = (this.state.hero.currentHp / this.state.hero.max);
                 const enemyPct = (this.state.enemy.currentHp / this.state.enemy.max);
-                
                 document.getElementById('hero-bar').style.width = (heroPct * 100) + '%';
                 document.getElementById('enemy-bar').style.width = (enemyPct * 100) + '%';
-
-                // --- DYNAMIC WOUNDED STATE CHECK ---
-                if (heroPct <= 0.5 && !this.state.heroWounded) {
-                    this.state.heroWounded = true;
-                    document.getElementById('hero-img').src = IMAGES[this.state.hero.wounded_bg][0];
-                } else if (heroPct > 0.5 && this.state.heroWounded) {
-                    // Safety check if healing was implemented (not currently, but good practice)
-                    this.state.heroWounded = false;
-                    document.getElementById('hero-img').src = IMAGES[this.state.hero.bg][0];
-                }
-
-                if (enemyPct <= 0.5 && !this.state.enemyWounded) {
-                    this.state.enemyWounded = true;
-                    document.getElementById('enemy-img').src = IMAGES[this.state.enemy.wounded_bg][0];
-                } else if (enemyPct > 0.5 && this.state.enemyWounded) {
-                    // Safety check if healing was implemented
-                    this.state.enemyWounded = false;
-                    document.getElementById('enemy-img').src = IMAGES[this.state.enemy.bg][0];
-                }
+                if (heroPct <= 0.5 && !this.state.heroWounded) { this.state.heroWounded = true; document.getElementById('hero-img').src = IMAGES[this.state.hero.wounded_bg][0]; }
+                if (enemyPct <= 0.5 && !this.state.enemyWounded) { this.state.enemyWounded = true; document.getElementById('enemy-img').src = IMAGES[this.state.enemy.wounded_bg][0]; }
             },
 
             animateDie(sides) {
                 const el = document.getElementById(`d${sides}-btn`);
-                if(el) {
-                    el.classList.add('rolling'); 
-                    setTimeout(() => {
-                        el.classList.remove('rolling');
-                    }, 2000);
-                }
+                if(el) { el.classList.add('rolling'); setTimeout(() => { el.classList.remove('rolling'); }, 2000); }
             },
 
             triggerDamage(who, amount) {
                 const panel = document.getElementById(`${who}-panel`);
-                // Flash red
                 panel.classList.add('taking-damage');
                 setTimeout(() => panel.classList.remove('taking-damage'), 400);
-
-                // Floating Text
                 const text = document.createElement('div');
                 text.className = 'damage-text';
                 text.innerText = `-${amount}`;
@@ -540,7 +436,6 @@
                 setTimeout(() => text.remove(), 3000);
             },
 
-            // New helper to trigger MISS text
             triggerMiss(who) {
                 const panel = document.getElementById(`${who}-panel`);
                 const text = document.createElement('div');
@@ -566,7 +461,8 @@
 
         // --- STORY ENGINE ---
         const game = {
-            state: { scene: 'intro', hero: null, enemy: null, difficulty: 'apprentice' },
+            state: { scene: 'intro', hero: null, enemy: null, difficulty: 'apprentice', soundEnabled: false },
+            onVideoEnd: null, // Callback storage
 
             refreshArt() {
                 Object.keys(IMAGES).forEach(key => {
@@ -584,23 +480,117 @@
             toggleShare(show) {
                 const overlay = document.getElementById('share-overlay');
                 const content = document.getElementById('share-content');
-                if (show) {
-                    overlay.classList.remove('opacity-0', 'pointer-events-none');
-                    content.classList.remove('scale-95');
-                    content.classList.add('scale-100');
-                } else {
-                    overlay.classList.add('opacity-0', 'pointer-events-none');
-                    content.classList.remove('scale-100');
-                    content.classList.add('scale-95');
+                if (show) { overlay.classList.remove('opacity-0', 'pointer-events-none'); content.classList.remove('scale-95'); content.classList.add('scale-100'); } 
+                else { overlay.classList.add('opacity-0', 'pointer-events-none'); content.classList.remove('scale-100'); content.classList.add('scale-95'); }
+            },
+
+            // --- AUDIO TOGGLE ---
+            toggleSound() {
+                this.state.soundEnabled = !this.state.soundEnabled;
+                const vid = document.getElementById('game-video');
+                // Attempt to "wake up" audio context if needed, though interaction with button is usually enough
+                if(vid) {
+                    vid.muted = !this.state.soundEnabled;
                 }
+                this.renderNarrative(); // Re-render to update button state
             },
             
+            // --- CINEMATIC SYSTEM ---
+            playCinematic(videoSrc, callback) {
+                const overlay = document.getElementById('video-overlay');
+                const video = document.getElementById('game-video');
+                const btn = document.getElementById('video-play-btn');
+                
+                if (!overlay || !video) { if (callback) callback(); return; }
+
+                this.onVideoEnd = callback;
+                
+                // FORCE RELOAD STRATEGY
+                video.innerHTML = `<source src="${videoSrc}" type="video/mp4">`;
+                video.load(); // Required when changing sources dynamically via innerHTML/source tags
+                
+                // Ensure audio setting is respected
+                video.muted = !this.state.soundEnabled;
+
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in
+
+                video.onended = () => this.skipVideo(); // Auto close on end
+
+                // Handle Errors (e.g. 404 or bad format)
+                video.onerror = () => {
+                    console.log("Video failed to load: " + videoSrc);
+                    this.skipVideo();
+                }
+
+                // Try to play
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(err => {
+                        console.log("Autoplay prevented or error:", err);
+                        // If it fails (often due to unmuted autoplay policies if soundEnabled is true but no interaction registered yet), show button
+                        btn.classList.remove('hidden');
+                    });
+                }
+            },
+
+            forcePlayVideo() {
+                const video = document.getElementById('game-video');
+                const btn = document.getElementById('video-play-btn');
+                if (video) {
+                    video.muted = !this.state.soundEnabled; // Ensure sound state is correct
+                    video.play();
+                }
+                if (btn) btn.classList.add('hidden');
+            },
+
+            skipVideo() {
+                const overlay = document.getElementById('video-overlay');
+                const video = document.getElementById('game-video');
+                
+                if (video) video.pause();
+                if (overlay) {
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                        if (this.onVideoEnd) {
+                            const cb = this.onVideoEnd;
+                            this.onVideoEnd = null; // Clear callback
+                            cb();
+                        }
+                    }, 500); // Wait for fade out
+                }
+            },
+
             init() { 
-                this.updateScene('intro'); 
                 lucide.createIcons(); 
+                // Show Intro Scene immediately (user clicks start to play video)
+                this.updateScene('intro');
             },
 
             updateScene(scene) {
+                // --- CINEMATIC INTERCEPTIONS ---
+                // Before Combat -> Play Middle Video
+                if (scene === 'combat' && this.state.scene === 'monster_intro') {
+                    this.playCinematic('middle-vid.mp4', () => {
+                        this._performSceneUpdate(scene);
+                    });
+                    return; // Stop here, wait for video
+                }
+                
+                // Before Victory Town -> Play Final Video
+                if (scene === 'town' && this.state.scene === 'traveler') {
+                    this.playCinematic('final-vid.mp4', () => {
+                        this._performSceneUpdate(scene);
+                    });
+                    return; // Stop here, wait for video
+                }
+
+                // Normal update
+                this._performSceneUpdate(scene);
+            },
+
+            _performSceneUpdate(scene) {
                 const el = document.getElementById('scene-container');
                 const bg = document.getElementById('background-layer');
                 const ui = document.getElementById('top-ui');
@@ -642,7 +632,13 @@
             },
 
             home() { this.state.hero = null; this.updateScene('intro'); },
-            start() { this.updateScene('difficulty'); },
+            
+            // Modified START to play video first, then go to difficulty
+            start() { 
+                this.playCinematic('start-vid.mp4', () => {
+                    this.updateScene('difficulty');
+                });
+            },
             
             back() {
                 const s = this.state.scene;
@@ -692,9 +688,22 @@
                 const btn = (fn, txt, i) => `<button onclick="game.${fn}" class="group relative px-8 py-4 bg-gradient-to-b from-yellow-700 to-yellow-900 text-yellow-100 font-bold rounded-xl shadow-lg active:scale-95 transition-all border border-yellow-600/50 overflow-hidden w-full md:w-auto flex items-center justify-center gap-3"><span class="relative flex items-center gap-2 font-old text-xl tracking-wider">${txt} <i data-lucide="${i}" class="w-5 h-5"></i></span></button>`;
                 
                 if (s.scene === 'intro') {
+                    // Sound Button Logic
+                    const soundBtnClass = s.soundEnabled 
+                        ? "bg-green-800/80 text-green-200 border-green-500 hover:bg-green-700"
+                        : "bg-red-900/80 text-red-200 border-red-500 animate-pulse hover:bg-red-800";
+                    const soundIcon = s.soundEnabled ? "volume-2" : "volume-x";
+                    const soundText = s.soundEnabled ? "Sound On" : "Enable Sound";
+
                     h = `<div class="text-center space-y-6 max-w-md px-4 relative z-10 flex flex-col items-center">
                             <div class="flex justify-center"><i data-lucide="shield" class="w-24 h-24 text-yellow-600 fill-yellow-950/50 animate-pulse"></i></div>
                             <h1 class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-700 filter drop-shadow-xl font-old leading-tight">Quest for the<br/>Golden Pint</h1>
+                            
+                            <!-- Sound Toggle -->
+                            <button onclick="game.toggleSound()" class="px-6 py-2 rounded-full border ${soundBtnClass} transition-all font-bold flex items-center gap-2 shadow-lg scale-90 hover:scale-100 mb-2">
+                                <i data-lucide="${soundIcon}" class="w-4 h-4"></i> ${soundText}
+                            </button>
+
                             ${btn('start()', 'Begin Adventure', 'sword')}
                             <div class="flex gap-4 mt-6">
                                 <button onclick="game.refreshArt()" class="px-4 py-2 glass-panel rounded-full text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-2 group border-white/5 hover:border-white/20"><i data-lucide="refresh-cw" class="w-3 h-3 group-hover:animate-spin"></i> Reroll Art</button>
@@ -760,16 +769,7 @@
                 } else if (s.scene === 'traveler') {
                     h = `<div class="text-center px-4 max-w-md flex flex-col items-center"><div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center ring-4 ring-yellow-500/50 mx-auto mb-6 shadow-2xl"><i data-lucide="trophy" class="w-10 h-10 text-yellow-400"></i></div><h2 class="text-6xl font-bold text-white mb-4 font-old drop-shadow-xl">Victory!</h2><div class="glass-panel p-6 rounded-xl border-yellow-500/30 text-yellow-100 text-lg mb-6 font-old">"You have triumphed! The treasures of the path are yours."</div>${btn("updateScene('town')", "Go to Tavern", "beer")}</div>`;
                 } else if (s.scene === 'town') {
-                    // UPDATED TOWN SCENE: Highly celebratory description
-                    h = `<div class="text-center px-4 max-w-md flex flex-col items-center">
-                            <div class="flex justify-center gap-4 mb-6 text-yellow-500"><i data-lucide="crown" class="w-12 h-12"></i><i data-lucide="beer" class="w-12 h-12"></i></div>
-                            <h1 class="text-5xl font-extrabold text-yellow-400 mb-4 font-old">The Golden Pint</h1>
-                            <p class="glass-panel p-4 rounded-xl text-slate-200 mb-6 font-old text-lg leading-relaxed">
-                                You are the hero of the hour! Ale flows freely as cheerful barmaids surround you. 
-                                The entire tavern raises a pint in your honor, a true hero's welcome after a journey well fought.
-                            </p>
-                            ${btn("home()", "Replay", "rotate-ccw")}
-                        </div>`;
+                    h = `<div class="text-center px-4 max-w-md flex flex-col items-center"><div class="flex justify-center gap-4 mb-6 text-yellow-500"><i data-lucide="crown" class="w-12 h-12"></i><i data-lucide="beer" class="w-12 h-12"></i></div><h1 class="text-5xl font-extrabold text-yellow-400 mb-4 font-old">The Golden Pint</h1><p class="glass-panel p-4 rounded-xl text-slate-200 mb-6 font-old text-lg leading-relaxed">You are the hero of the hour! Ale flows freely as cheerful barmaids surround you. The entire tavern raises a pint in your honor, a true hero's welcome after a journey well fought.</p>${btn("home()", "Replay", "rotate-ccw")}</div>`;
                 } else if (s.scene === 'game_over') {
                     h = `<div class="text-center px-4 flex flex-col items-center"><i data-lucide="skull" class="w-24 h-24 text-red-600 mx-auto mb-6"></i><h1 class="text-6xl font-black text-red-600 mb-6 font-old">You Died</h1>${btn("home()", "Try Again", "rotate-ccw")}</div>`;
                 }
@@ -781,4 +781,4 @@
         window.onload = () => game.init();
     </script>
 </body>
-</html>
+    </html>
